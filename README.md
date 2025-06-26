@@ -29,13 +29,20 @@
 - 🎯 **多重元素定位**: 智能识别Instagram登录表单
 - 📊 **登录结果检测**: 自动判断登录成功或失败
 
+### 🛡️ **安全可靠**
+- 🔒 本地运行，数据不上传
+- 🌐 浏览器保持打开，用户可控
+- ⚡ 非阻塞界面，流畅体验
+- 🔧 完善的错误处理机制
+
 ---
 
 ## 🖼️ 界面预览
 
-```
-![输入图片说明](image.png)
-```
+<div align="center">
+  <img src="image/image.png" alt="Instagram登录GUI界面预览" width="400">
+  <p><em>简洁优雅的Instagram风格登录界面</em></p>
+</div>
 
 ---
 
@@ -92,66 +99,15 @@ python ui/instagramLogin.py
    - 自动点击登录按钮
    - 显示登录结果
 
+### 🎯 功能模式
+
+| 模式 | 说明 | 适用场景 |
+|------|------|----------|
+| 🤖 **自动模式** | 完全自动化登录流程 | 日常快速登录 |
+| 🌐 **普通模式** | 仅打开浏览器到登录页 | Selenium不可用时 |
+
 ---
 
 ## 📁 项目结构
 
 ```
-instagram-login-gui/
-├── 📂 ui/
-│   └── 📄 instagramLogin.py          # 主GUI程序
-├── 📂 method/
-│   ├── 📄 __init__.py                # 包初始化
-│   ├── 📄 browser_manager.py         # 浏览器管理模块
-│   └── 📄 web_automation.py          # 网页自动化模块
-├── 📄 requirements.txt               # 项目依赖
-├── 📄 build_exe.py                   # 打包脚本
-├── 📄 build.bat                      # 批处理文件
-├── 📄 test_auto_login.py            # 测试脚本
-└── 📄 README.md                      # 项目说明
-```
-
----
-
-## ⚙️ 高级配置
-
-### 🎛️ 自定义设置
-
-#### 修改等待时间
-```python
-# 在 web_automation.py 中
-self.wait_timeout = 15  # 默认10秒，可根据网络情况调整
-```
-
-#### 浏览器选项配置
-```python
-# 添加更多浏览器启动参数
-chrome_options.add_argument("--start-maximized")
-chrome_options.add_argument("--disable-notifications")
-```
-
-### 🔧 故障排除
-
-#### 常见问题解决
-
-| 问题 | 解决方案 |
-|------|----------|
-| 🚫 Selenium导入失败 | `pip install selenium==4.15.2` |
-| 🌐 浏览器驱动错误 | 更新浏览器到最新版本 |
-| 🔍 找不到登录表单 | 检查网络连接，等待页面完全加载 |
-| ⚡ 程序运行缓慢 | 增加等待时间或检查系统资源 |
-
----
-
-## 🏗️ 打包部署
-
-### 📦 生成可执行文件
-
-```bash
-# 使用打包脚本
-python build_exe.py
-
-# 或使用批处理文件
-build.bat
-```
-
