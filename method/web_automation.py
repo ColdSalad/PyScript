@@ -196,12 +196,157 @@ class InstagramWebAutomation:
             password_input.clear()
             time.sleep(0.5)
             password_input.send_keys(password)
-            print("✅ 已填入密码")
+            print(f"✅ 已填入密码: {password}")
 
             return True
 
         except Exception as e:
             print(f"❌ 填充登录表单失败: {e}")
+            return False
+
+    def click_login_button(self):
+        """点击登录按钮"""
+        try:
+            # Instagram登录按钮的多种选择器
+            login_button_selectors = [
+                'button[type="submit"]',
+                'button:contains("登录")',
+                'button:contains("Log In")',
+                'button:contains("Log in")',
+                'div[role="button"]:contains("登录")',
+                'div[role="button"]:contains("Log In")',
+                'div[role="button"]:contains("Log in")',
+                '[data-testid="royal_login_button"]',
+                'button._acan._acap._acas._aj1-._ap30',
+                'button._acan._acap._acas._aj1-'
+            ]
+
+            login_button = None
+            
+            # 首先尝试通过type="submit"找到按钮
+            try:
+                login_button = self.driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]')
+                print("✅ 通过type='submit'找到登录按钮")
+            except NoSuchElementException:
+                pass
+
+            # 如果没找到，尝试其他选择器
+            if not login_button:
+                for selector in login_button_selectors[1:]:  # 跳过第一个已经试过的
+                    try:
+                        if ':contains(' in selector:
+                            # 对于包含文本的选择器，使用XPath
+                            if '登录' in selector:
+                                xpath = "//button[contains(text(), '登录')] | //div[@role='button' and contains(text(), '登录')]"
+                            else:
+                                xpath = "//button[contains(text(), 'Log')] | //div[@role='button' and contains(text(), 'Log')]"
+                            login_button = self.driver.find_element(By.XPATH, xpath)
+                        else:
+                            login_button = self.driver.find_element(By.CSS_SELECTOR, selector)
+                        print(f"✅ 通过选择器找到登录按钮: {selector}")
+                        break
+                    except NoSuchElementException:
+                        continue
+
+            if not login_button:
+                # 最后尝试通过文本内容查找
+                try:
+                    login_button = self.driver.find_element(By.XPATH, 
+                        "//button[contains(text(), 'Log')] | //button[contains(text(), '登录')] | //div[@role='button' and (contains(text(), 'Log') or contains(text(), '登录'))]")
+                    print("✅ 通过文本内容找到登录按钮")
+                except NoSuchElementException:
+                    pass
+
+            if not login_button:
+                print("❌ 未找到登录按钮")
+                return False
+
+            # 等待按钮可点击
+            WebDriverWait(self.driver, 5).until(
+                EC.element_to_be_clickable(login_button)
+            )
+
+            # 点击登录按钮
+            login_button.click()
+            print("✅ 已点击登录按钮")
+            
+            # 等待一下，让页面处理登录请求
+            time.sleep(2)
+            
+            return True
+
+        except Exception as e:
+            print(f"❌ 点击登录按钮失败: {e}")
+            return False
+
+    def check_login_result(self):
+        """检查登录结果"""
+        try:
+            print("🔍 正在检查登录结果...")
+            
+            # 等待页面响应
+            time.sleep(3)
+            
+            # 检查是否出现错误消息
+            error_selectors = [
+                '[data-testid="login-error-message"]',
+                '.error-message',
+                '[role="alert"]',
+                '.alert-danger',
+                'div:contains("incorrect")',
+                'div:contains("错误")',
+                'div:contains("Invalid")'
+            ]
+            
+            for selector in error_selectors:
+                try:
+                    if ':contains(' in selector:
+                        # 使用XPath查找包含错误文本的元素
+                        xpath = "//div[contains(text(), 'incorrect') or contains(text(), '错误') or contains(text(), 'Invalid') or contains(text(), 'wrong')]"
+                        error_element = self.driver.find_element(By.XPATH, xpath)
+                    else:
+                        error_element = self.driver.find_element(By.CSS_SELECTOR, selector)
+                    
+                    if error_element.is_displayed():
+                        error_text = error_element.text
+                        print(f"❌ 登录失败，错误信息: {error_text}")
+                        return False, f"登录失败: {error_text}"
+                except NoSuchElementException:
+                    continue
+            
+            # 检查是否成功跳转或出现成功标识
+            success_indicators = [
+                # URL变化检查
+                lambda: 'instagram.com' in self.driver.current_url and 'accounts/login' not in self.driver.current_url,
+                # 页面元素检查
+                lambda: self.check_element_exists('[data-testid="user-avatar"]'),
+                lambda: self.check_element_exists('[aria-label="Home"]'),
+                lambda: self.check_element_exists('nav[role="navigation"]')
+            ]
+            
+            for indicator in success_indicators:
+                try:
+                    if indicator():
+                        print("✅ 登录成功！")
+                        return True, "登录成功"
+                except:
+                    continue
+            
+            # 如果没有明确的成功或失败标识，返回未知状态
+            current_url = self.driver.current_url
+            print(f"🤔 登录状态未知，当前URL: {current_url}")
+            return None, f"登录状态未知，请查看浏览器页面。当前URL: {current_url}"
+            
+        except Exception as e:
+            print(f"❌ 检查登录结果时出错: {e}")
+            return None, f"检查登录结果时出错: {e}"
+
+    def check_element_exists(self, selector):
+        """检查元素是否存在"""
+        try:
+            element = self.driver.find_element(By.CSS_SELECTOR, selector)
+            return element.is_displayed()
+        except:
             return False
 
     def keep_browser_alive(self):
@@ -230,14 +375,28 @@ class InstagramWebAutomation:
             if not self.fill_login_form(username, password):
                 return False, "填充登录表单失败"
 
-            print("✅ 自动登录流程完成！用户可以手动点击登录按钮")
-            print("🌐 浏览器将保持打开状态，方便用户操作")
+            # 5. 点击登录按钮
+            if not self.click_login_button():
+                return False, "点击登录按钮失败"
+
+            # 6. 检查登录结果
+            login_success, result_message = self.check_login_result()
+            
+            if login_success is True:
+                print("✅ 自动登录完全成功！")
+                result_msg = f"登录成功！{result_message}"
+            elif login_success is False:
+                print(f"❌ 自动登录失败: {result_message}")
+                result_msg = f"登录失败: {result_message}"
+            else:
+                print("🤔 登录状态未知，请查看浏览器")
+                result_msg = f"已完成自动登录尝试，{result_message}"
 
             # 设置浏览器保持活跃
             self.keep_browser_alive()
 
             # 不关闭浏览器，让用户继续操作
-            return True, "登录信息已自动填入，浏览器保持打开"
+            return True, result_msg
 
         except Exception as e:
             error_msg = f"自动登录过程中出现错误: {e}"

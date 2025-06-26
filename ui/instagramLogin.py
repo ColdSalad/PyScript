@@ -377,7 +377,7 @@ class InstagramLoginGUI:
         
         if success:
             # 成功时显示简洁提示，不需要用户确认
-            self.show_status_message("✅ 登录信息已自动填入浏览器，请手动点击登录按钮完成登录", "success")
+            self.show_status_message("✅ 已自动填入登录信息并点击登录按钮，请查看浏览器登录结果", "success")
         else:
             # 如果自动填充失败，回退到普通模式
             self.show_status_message(f"⚠️ 自动填充失败: {message}，正在使用普通模式...", "warning")
