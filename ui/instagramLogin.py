@@ -3,7 +3,25 @@ from tkinter import ttk, messagebox
 from PIL import Image, ImageTk, ImageDraw
 import requests
 from io import BytesIO
+import math
+import webbrowser
+import subprocess
+import os
+import sys
+import threading
 
+# 添加method目录到路径
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'method'))
+from browser_manager import BrowserManager
+
+# 尝试导入网页自动化模块
+try:
+    from web_automation import InstagramWebAutomation
+    SELENIUM_AVAILABLE = True
+    print("✅ Selenium模块可用，支持自动填充功能")
+except ImportError:
+    SELENIUM_AVAILABLE = False
+    print("❌ Selenium模块不可用，仅支持普通浏览器打开")
 
 class InstagramLoginGUI:
     def __init__(self, root):
@@ -32,6 +50,9 @@ class InstagramLoginGUI:
         # 创建登录表单容器 - 移除边框
         self.login_container = tk.Frame(self.main_frame, bg='#fafafa')
         self.login_container.pack(expand=True, fill='both', padx=30, pady=20)
+
+        # 初始化浏览器管理器
+        self.browser_manager = BrowserManager()
 
         self.create_widgets()
 
@@ -182,36 +203,8 @@ class InstagramLoginGUI:
         # 密码输入框
         self.create_enhanced_input_field(input_area, "密码", 'password', show='*')
 
-        # 登录按钮
-        self.login_btn = tk.Button(input_area,
-                                  text="登录",
-                                  font=('Microsoft YaHei', 12, 'bold'),
-                                  bg='#0095f6',
-                                  fg='white',
-                                  relief='flat',
-                                  cursor='hand2',
-                                  bd=0,
-                                  command=self.login,
-                                  highlightthickness=0,
-                                  padx=20,
-                                  pady=10)
-        self.login_btn.pack(pady=(30, 20), fill='x')
-        
-        # 创建圆角效果
-        self.create_rounded_button(self.login_btn, 8)
-
-        # 添加登录按钮悬停效果
-        self.add_login_button_effects()
-
-        # 忘记密码链接
-        forgot_password = tk.Label(input_area,
-                                 text="忘记密码？",
-                                 font=('Microsoft YaHei', 10, 'underline'),
-                                 fg='#00376b',
-                                 bg='#fafafa',
-                                 cursor='hand2')
-        forgot_password.pack(pady=(15, 0))
-        forgot_password.bind("<Button-1>", self.forgot_password)
+        # 登录按钮 - 使用Canvas创建圆角按钮
+        self.create_rounded_login_button(input_area)
 
         # 底部信息
         bottom_frame = tk.Frame(self.login_container, bg='#fafafa')
@@ -299,8 +292,26 @@ class InstagramLoginGUI:
             return ''
         return value
 
+    def create_rounded_login_button(self, parent):
+        """创建登录按钮"""
+        # 登录按钮
+        self.login_btn = tk.Button(parent,
+                                  text="登录",
+                                  font=('Microsoft YaHei', 12, 'bold'),
+                                  bg='#0095f6',
+                                  fg='white',
+                                  relief='flat',
+                                  cursor='hand2',
+                                  bd=0,
+                                  command=self.login,
+                                  highlightthickness=0)
+        self.login_btn.pack(pady=(20, 15), fill='x', ipady=15)
+
+        # 添加登录按钮悬停效果
+        self.add_login_button_effects()
+
     def login(self):
-        """登录处理"""
+        """登录处理 - 优先使用自动填充模式"""
         username = self.get_input_value('username')
         password = self.get_input_value('password')
 
@@ -308,20 +319,121 @@ class InstagramLoginGUI:
             messagebox.showerror("错误", "请输入用户名和密码")
             return
 
-        # 这里可以添加实际的登录逻辑
-        # 目前只是显示一个消息框
-        messagebox.showinfo("登录成功", f"欢迎回来，{username}！")
+        # 如果Selenium可用，优先使用自动填充模式
+        if SELENIUM_AVAILABLE:
+            # 使用自动填充模式
+            self.auto_fill_login(username, password)
+        else:
+            # Selenium不可用时，使用普通浏览器打开模式
+            self.open_browser()
 
-        # 实际应用中，您可以在这里调用Instagram API或其他认证服务
-        # 例如：
-        # success = authenticate_user(username, password)
-        # if success:
-        #     self.root.destroy()  # 关闭登录窗口
-        #     open_main_app()      # 打开主应用
+    def auto_fill_login(self, username, password):
+        """自动填充登录信息"""
+        try:
+            # 更新登录按钮状态，显示处理中
+            self.login_btn.configure(text="正在处理...", state='disabled')
+            self.root.update()
 
-    def forgot_password(self, event):
-        """忘记密码处理"""
-        messagebox.showinfo("忘记密码", "请联系管理员重置密码")
+            # 在后台线程中执行自动填充，避免界面卡死
+            def auto_fill_thread():
+                try:
+                    automation = InstagramWebAutomation()
+                    success, message = automation.auto_login_instagram(username, password)
+
+                    # 在主线程中显示结果
+                    self.root.after(0, lambda: self.show_auto_fill_result(success, message))
+
+                except Exception as e:
+                    error_msg = f"自动填充过程中出现错误: {e}"
+                    self.root.after(0, lambda: self.show_auto_fill_result(False, error_msg))
+
+            # 启动后台线程
+            thread = threading.Thread(target=auto_fill_thread, daemon=True)
+            thread.start()
+
+        except Exception as e:
+            # 恢复按钮状态
+            self.login_btn.configure(text="登录", state='normal')
+            messagebox.showerror("错误", f"启动自动填充失败: {e}")
+
+    def show_auto_fill_result(self, success, message):
+        """显示自动填充结果"""
+        # 恢复登录按钮状态
+        self.login_btn.configure(text="登录", state='normal')
+        
+        if success:
+            # 成功时显示简洁提示，不需要用户确认
+            self.show_status_message("✅ 登录信息已自动填入浏览器，请手动点击登录按钮完成登录", "success")
+        else:
+            # 如果自动填充失败，回退到普通模式
+            self.show_status_message(f"⚠️ 自动填充失败: {message}，正在使用普通模式...", "warning")
+            # 延迟一秒后打开普通浏览器
+            self.root.after(1000, self.open_browser)
+
+    def show_status_message(self, message, msg_type="info"):
+        """显示状态消息（非阻塞）"""
+        # 创建状态标签（如果不存在）
+        if not hasattr(self, 'status_label'):
+            self.status_label = tk.Label(
+                self.login_container,
+                font=('Microsoft YaHei', 9),
+                bg='#fafafa',
+                wraplength=320
+            )
+            self.status_label.pack(pady=(10, 0))
+        
+        # 根据消息类型设置颜色
+        if msg_type == "success":
+            color = "#28a745"  # 绿色
+        elif msg_type == "warning":
+            color = "#ffc107"  # 黄色
+        elif msg_type == "error":
+            color = "#dc3545"  # 红色
+        else:
+            color = "#6c757d"  # 灰色
+        
+        self.status_label.configure(text=message, fg=color)
+        self.status_label.pack(pady=(10, 0))
+        
+        # 5秒后清除消息
+        self.root.after(5000, lambda: self.clear_status_message())
+
+    def clear_status_message(self):
+        """清除状态消息"""
+        if hasattr(self, 'status_label'):
+            self.status_label.configure(text="")
+
+    def open_browser(self):
+        """使用浏览器管理器打开Instagram（普通模式）"""
+        try:
+            success, browser_used = self.browser_manager.open_instagram(show_messages=False)
+
+            if success:
+                # 显示成功消息
+                message = f"登录信息已记录！\n已使用 {browser_used} 打开Instagram\n\n请在浏览器中手动输入登录信息。"
+                messagebox.showinfo("浏览器已打开", message)
+                print(f"✅ 浏览器打开成功: {browser_used}")
+            else:
+                # 如果自动打开失败，显示手动访问提示
+                messagebox.showwarning("提示",
+                    "登录信息已记录！\n\n无法自动打开浏览器\n请手动访问: https://www.instagram.com")
+                print("❌ 所有浏览器打开方法都失败了")
+
+        except Exception as e:
+            print(f"❌ 浏览器管理器出错: {e}")
+            messagebox.showerror("错误", f"打开浏览器时出现错误: {str(e)}")
+
+    def get_available_browsers_info(self):
+        """获取可用浏览器信息（调试用）"""
+        try:
+            browsers = self.browser_manager.get_available_browsers()
+            print("可用浏览器:")
+            for browser in browsers:
+                print(f"  - {browser}")
+            return browsers
+        except Exception as e:
+            print(f"获取浏览器信息失败: {e}")
+            return []
 
 def main():
     """主函数"""
