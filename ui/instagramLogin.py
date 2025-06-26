@@ -54,6 +54,9 @@ class InstagramLoginGUI:
         # 初始化浏览器管理器
         self.browser_manager = BrowserManager()
 
+        # 初始化网页自动化实例（保持引用防止被垃圾回收）
+        self.web_automation = None
+
         self.create_widgets()
 
         # 绑定窗口拖拽事件
@@ -164,7 +167,17 @@ class InstagramLoginGUI:
 
     def close_window(self):
         """关闭窗口"""
+        self.cleanup()
         self.root.quit()
+
+    def cleanup(self):
+        """清理资源"""
+        try:
+            if self.web_automation and hasattr(self.web_automation, 'driver') and self.web_automation.driver:
+                print("正在关闭浏览器...")
+                self.web_automation.close_browser()
+        except Exception as e:
+            print(f"清理资源时出错: {e}")
 
     def center_window(self):
         """窗口居中显示"""
@@ -337,8 +350,9 @@ class InstagramLoginGUI:
             # 在后台线程中执行自动填充，避免界面卡死
             def auto_fill_thread():
                 try:
-                    automation = InstagramWebAutomation()
-                    success, message = automation.auto_login_instagram(username, password)
+                    # 使用类实例变量保持引用
+                    self.web_automation = InstagramWebAutomation()
+                    success, message = self.web_automation.auto_login_instagram(username, password)
 
                     # 在主线程中显示结果
                     self.root.after(0, lambda: self.show_auto_fill_result(success, message))
