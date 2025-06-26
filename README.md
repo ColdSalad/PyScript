@@ -88,6 +88,7 @@ python ui/instagramLogin.py
    ```bash
    python ui/instagramLogin.py
    ```
+   
 
 2. **输入登录信息**
    - 在用户名框输入Instagram用户名/邮箱/手机号
