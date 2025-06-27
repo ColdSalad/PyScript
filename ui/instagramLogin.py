@@ -17,8 +17,9 @@ from browser_manager import BrowserManager
 # 尝试导入网页自动化模块
 try:
     from web_automation import InstagramWebAutomation
+    from instagram_like_automation import InstagramLikeAutomation
     SELENIUM_AVAILABLE = True
-    print("✅ Selenium模块可用，支持自动填充功能")
+    print("✅ Selenium模块可用，支持自动填充和点赞功能")
 except ImportError:
     SELENIUM_AVAILABLE = False
     print("❌ Selenium模块不可用，仅支持普通浏览器打开")
@@ -56,6 +57,7 @@ class InstagramLoginGUI:
 
         # 初始化网页自动化实例（保持引用防止被垃圾回收）
         self.web_automation = None
+        self.like_automation = None
 
         self.create_widgets()
 
@@ -173,9 +175,15 @@ class InstagramLoginGUI:
     def cleanup(self):
         """清理资源"""
         try:
+            # 清理普通自动化实例
             if self.web_automation and hasattr(self.web_automation, 'driver') and self.web_automation.driver:
                 print("正在关闭浏览器...")
                 self.web_automation.close_browser()
+            
+            # 清理点赞自动化实例
+            if self.like_automation and hasattr(self.like_automation, 'driver') and self.like_automation.driver:
+                print("正在关闭点赞自动化浏览器...")
+                self.like_automation.close_browser()
         except Exception as e:
             print(f"清理资源时出错: {e}")
 
@@ -223,7 +231,7 @@ class InstagramLoginGUI:
         bottom_frame = tk.Frame(self.login_container, bg='#fafafa')
         bottom_frame.pack(side='bottom', fill='x', pady=(30, 10))
 
-        info_text = tk.Label(bottom_frame, text="简洁 • 安全 • 快速",
+        info_text = tk.Label(bottom_frame, text="自动登录 • 智能点赞 • 安全快速",
                             font=('Microsoft YaHei', 9),
                             fg='#8e8e8e', bg='#fafafa')
         info_text.pack()
@@ -267,6 +275,8 @@ class InstagramLoginGUI:
 
         # 存储引用
         setattr(self, f'{field_name}_entry', entry)
+
+
 
     def add_login_button_effects(self):
         """添加登录按钮悬停效果"""
@@ -332,10 +342,10 @@ class InstagramLoginGUI:
             messagebox.showerror("错误", "请输入用户名和密码")
             return
 
-        # 如果Selenium可用，优先使用自动填充模式
+        # 如果Selenium可用，默认使用点赞自动化模式
         if SELENIUM_AVAILABLE:
-            # 使用自动填充模式
-            self.auto_fill_login(username, password)
+            # 使用点赞自动化模式（默认启用）
+            self.auto_login_and_like(username, password)
         else:
             # Selenium不可用时，使用普通浏览器打开模式
             self.open_browser()
@@ -369,6 +379,56 @@ class InstagramLoginGUI:
             # 恢复按钮状态
             self.login_btn.configure(text="登录", state='normal')
             messagebox.showerror("错误", f"启动自动填充失败: {e}")
+
+    def auto_login_and_like(self, username, password):
+        """自动登录并点赞"""
+        try:
+            # 使用默认设置
+            max_likes = 10  # 默认点赞数量
+            target_url = "https://www.instagram.com/?next=%2F"  # 默认目标地址
+            
+            # 更新登录按钮状态
+            self.login_btn.configure(text="正在登录并点赞...", state='disabled')
+            self.root.update()
+
+            # 在后台线程中执行登录并点赞
+            def login_and_like_thread():
+                try:
+                    # 使用类实例变量保持引用
+                    self.like_automation = InstagramLikeAutomation()
+                    success, message = self.like_automation.login_and_like(
+                        username, password, target_url, max_likes
+                    )
+
+                    # 在主线程中显示结果
+                    self.root.after(0, lambda: self.show_like_automation_result(success, message))
+
+                except Exception as e:
+                    error_msg = f"登录并点赞过程中出现错误: {e}"
+                    self.root.after(0, lambda: self.show_like_automation_result(False, error_msg))
+
+            # 启动后台线程
+            thread = threading.Thread(target=login_and_like_thread, daemon=True)
+            thread.start()
+
+        except Exception as e:
+            # 恢复按钮状态
+            self.login_btn.configure(text="登录", state='normal')
+            messagebox.showerror("错误", f"启动登录并点赞失败: {e}")
+
+    def show_like_automation_result(self, success, message):
+        """显示登录并点赞结果"""
+        # 恢复登录按钮状态
+        self.login_btn.configure(text="登录", state='normal')
+        
+        if success:
+            # 成功时显示详细提示
+            self.show_status_message(f"✅ {message}，请查看浏览器操作结果", "success")
+        else:
+            # 如果失败，回退到普通模式
+            self.show_status_message(f"⚠️ 点赞自动化失败: {message}，正在使用普通模式...", "warning")
+            # 延迟一秒后打开普通浏览器
+            self.root.after(1000, self.open_browser)
 
     def show_auto_fill_result(self, success, message):
         """显示自动填充结果"""
