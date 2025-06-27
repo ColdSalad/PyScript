@@ -17,12 +17,28 @@ from browser_manager import BrowserManager
 # 尝试导入网页自动化模块
 try:
     from web_automation import InstagramWebAutomation
-    from instagram_like_automation import InstagramLikeAutomation
-    SELENIUM_AVAILABLE = True
-    print("✅ Selenium模块可用，支持自动填充和点赞功能")
+    print("✅ 网页自动化模块导入成功")
+    WEB_AUTOMATION_AVAILABLE = True
 except ImportError:
-    SELENIUM_AVAILABLE = False
-    print("❌ Selenium模块不可用，仅支持普通浏览器打开")
+    print("⚠️ 网页自动化模块不可用")
+    WEB_AUTOMATION_AVAILABLE = False
+
+# 尝试导入点赞自动化模块
+try:
+    from instagram_like_automation import InstagramLikeAutomation
+    print("✅ 点赞自动化模块导入成功")
+    LIKE_AUTOMATION_AVAILABLE = True
+except ImportError:
+    print("⚠️ 点赞自动化模块不可用")
+    LIKE_AUTOMATION_AVAILABLE = False
+
+# 检查Selenium是否完全可用
+SELENIUM_AVAILABLE = WEB_AUTOMATION_AVAILABLE and LIKE_AUTOMATION_AVAILABLE
+
+if SELENIUM_AVAILABLE:
+    print("✅ Selenium模块完全可用，支持自动填充和点赞功能")
+else:
+    print("❌ Selenium功能受限，仅支持普通浏览器打开")
 
 class InstagramLoginGUI:
     def __init__(self, root):
@@ -236,6 +252,32 @@ class InstagramLoginGUI:
                             fg='#8e8e8e', bg='#fafafa')
         info_text.pack()
 
+        # 添加调试按钮
+        debug_frame = tk.Frame(bottom_frame, bg='#fafafa')
+        debug_frame.pack(pady=(15, 0))
+
+        debug_btn = tk.Button(debug_frame,
+                             text="JavaScript选择器调试",
+                             font=('Microsoft YaHei', 9),
+                             bg='#f0f0f0',
+                             fg='#666666',
+                             relief='flat',
+                             cursor='hand2',
+                             bd=0,
+                             command=self.launch_js_debugger,
+                             highlightthickness=0)
+        debug_btn.pack(pady=5, padx=20, fill='x')
+
+        # 添加调试按钮悬停效果
+        def on_debug_enter(e):
+            debug_btn.configure(bg='#e0e0e0')
+
+        def on_debug_leave(e):
+            debug_btn.configure(bg='#f0f0f0')
+
+        debug_btn.bind('<Enter>', on_debug_enter)
+        debug_btn.bind('<Leave>', on_debug_leave)
+
     def create_enhanced_input_field(self, parent, placeholder, field_name, show=None):
         """创建增强的输入框"""
         # 输入框容器
@@ -275,8 +317,6 @@ class InstagramLoginGUI:
 
         # 存储引用
         setattr(self, f'{field_name}_entry', entry)
-
-
 
     def add_login_button_effects(self):
         """添加登录按钮悬停效果"""
@@ -334,7 +374,7 @@ class InstagramLoginGUI:
         self.add_login_button_effects()
 
     def login(self):
-        """登录处理 - 优先使用自动填充模式"""
+        """登录处理 - 优先使用点赞自动化模式"""
         username = self.get_input_value('username')
         password = self.get_input_value('password')
 
@@ -342,12 +382,15 @@ class InstagramLoginGUI:
             messagebox.showerror("错误", "请输入用户名和密码")
             return
 
-        # 如果Selenium可用，默认使用点赞自动化模式
-        if SELENIUM_AVAILABLE:
-            # 使用点赞自动化模式（默认启用）
+        # 如果点赞自动化可用，优先使用点赞自动化模式
+        if LIKE_AUTOMATION_AVAILABLE:
+            print("🎯 使用点赞自动化模式")
             self.auto_login_and_like(username, password)
+        elif WEB_AUTOMATION_AVAILABLE:
+            print("🔧 使用网页自动化模式")
+            self.auto_fill_login(username, password)
         else:
-            # Selenium不可用时，使用普通浏览器打开模式
+            print("🌐 使用普通浏览器模式")
             self.open_browser()
 
     def auto_fill_login(self, username, password):
@@ -385,15 +428,23 @@ class InstagramLoginGUI:
         try:
             # 使用默认设置
             max_likes = 10  # 默认点赞数量
-            target_url = "https://www.instagram.com/?next=%2F"  # 默认目标地址
+            target_url = "https://www.instagram.com/?next=%2F"  # Instagram首页推荐页面
             
             # 更新登录按钮状态
             self.login_btn.configure(text="正在登录并点赞...", state='disabled')
             self.root.update()
 
+            # 显示开始提示
+            self.show_status_message("🚀 正在启动自动登录和点赞功能...", "info")
+
             # 在后台线程中执行登录并点赞
             def login_and_like_thread():
                 try:
+                    print(f"🔄 开始自动登录和点赞流程")
+                    print(f"   用户名: {username}")
+                    print(f"   目标URL: {target_url}")
+                    print(f"   最大点赞数: {max_likes}")
+                    
                     # 使用类实例变量保持引用
                     self.like_automation = InstagramLikeAutomation()
                     success, message = self.like_automation.login_and_like(
@@ -405,6 +456,7 @@ class InstagramLoginGUI:
 
                 except Exception as e:
                     error_msg = f"登录并点赞过程中出现错误: {e}"
+                    print(f"❌ {error_msg}")
                     self.root.after(0, lambda: self.show_like_automation_result(False, error_msg))
 
             # 启动后台线程
@@ -414,7 +466,9 @@ class InstagramLoginGUI:
         except Exception as e:
             # 恢复按钮状态
             self.login_btn.configure(text="登录", state='normal')
-            messagebox.showerror("错误", f"启动登录并点赞失败: {e}")
+            error_msg = f"启动登录并点赞失败: {e}"
+            print(f"❌ {error_msg}")
+            messagebox.showerror("错误", error_msg)
 
     def show_like_automation_result(self, success, message):
         """显示登录并点赞结果"""
@@ -423,12 +477,28 @@ class InstagramLoginGUI:
         
         if success:
             # 成功时显示详细提示
-            self.show_status_message(f"✅ {message}，请查看浏览器操作结果", "success")
+            print(f"✅ 点赞自动化成功: {message}")
+            self.show_status_message(f"🎉 {message}！浏览器将保持打开状态，您可以查看操作结果", "success")
+            
+            # 显示成功对话框
+            messagebox.showinfo("自动点赞成功", 
+                f"✅ 登录和点赞操作已完成！\n\n{message}\n\n浏览器将保持打开状态，您可以继续浏览或手动操作。")
         else:
-            # 如果失败，回退到普通模式
-            self.show_status_message(f"⚠️ 点赞自动化失败: {message}，正在使用普通模式...", "warning")
-            # 延迟一秒后打开普通浏览器
-            self.root.after(1000, self.open_browser)
+            # 如果失败，显示错误信息并提供选择
+            print(f"❌ 点赞自动化失败: {message}")
+            self.show_status_message(f"⚠️ 自动化失败: {message}", "error")
+            
+            # 询问用户是否使用普通模式
+            result = messagebox.askyesno("自动化失败", 
+                f"❌ 自动登录和点赞失败:\n{message}\n\n是否使用普通浏览器模式打开Instagram？")
+            
+            if result:
+                # 用户选择使用普通模式
+                self.show_status_message("🔄 正在使用普通模式打开浏览器...", "info")
+                self.root.after(1000, self.open_browser)
+            else:
+                # 用户选择不打开浏览器
+                self.show_status_message("操作已取消", "info")
 
     def show_auto_fill_result(self, success, message):
         """显示自动填充结果"""
@@ -508,6 +578,61 @@ class InstagramLoginGUI:
         except Exception as e:
             print(f"获取浏览器信息失败: {e}")
             return []
+
+    def launch_js_debugger(self):
+        """启动JavaScript选择器调试器"""
+        try:
+            # 获取用户输入的登录信息
+            username = self.get_input_value('username')
+            password = self.get_input_value('password')
+
+            if not username or not password:
+                messagebox.showwarning("提示", "请先输入用户名和密码，调试器需要登录Instagram")
+                return
+
+            # 在后台线程中启动调试器
+            def launch_debugger_thread():
+                try:
+                    # 导入JavaScript调试器
+                    import sys
+                    import os
+                    test_dir = os.path.join(os.path.dirname(__file__), '..', 'test')
+                    sys.path.append(test_dir)
+                    
+                    from JavaScript_debugger import InstagramJSDebugger
+                    
+                    # 创建调试器实例
+                    debugger = InstagramJSDebugger()
+                    
+                    # 设置登录信息（避免重复输入）
+                    debugger._username = username
+                    debugger._password = password
+                    
+                    # 修改调试器的登录凭据获取方法
+                    def get_cached_credentials():
+                        return username, password
+                    
+                    debugger.get_login_credentials = get_cached_credentials
+                    
+                    # 启动调试器
+                    debugger.run_debug()
+                    
+                except Exception as e:
+                    error_msg = f"启动JavaScript调试器失败: {e}"
+                    print(f"❌ {error_msg}")
+                    # 在主线程中显示错误
+                    self.root.after(0, lambda: messagebox.showerror("错误", error_msg))
+
+            # 显示启动提示
+            self.show_status_message("🔧 正在启动JavaScript选择器调试器...", "info")
+            
+            # 启动后台线程
+            thread = threading.Thread(target=launch_debugger_thread, daemon=True)
+            thread.start()
+
+        except Exception as e:
+            messagebox.showerror("错误", f"启动调试器时出现错误: {e}")
+            print(f"❌ 启动调试器错误: {e}")
 
 def main():
     """主函数"""
