@@ -1,0 +1,62 @@
+[
+    {
+        "name": "ig_did",
+        "value": "231C00E7-C6AD-4164-A620-A165506CEB1F",
+        "domain": ".threads.net",
+        "path": "/",
+        "expires": 1782523021.652576,
+        "httpOnly": true,
+        "secure": true,
+        "sameSite": "None"
+    },
+    {
+        "name": "ig_did",
+        "value": "38816DA4-1483-401C-9D31-537D6D070222",
+        "domain": ".threads.com",
+        "path": "/",
+        "expires": 1782523022.508459,
+        "httpOnly": true,
+        "secure": true,
+        "sameSite": "None"
+    },
+    {
+        "name": "csrftoken",
+        "value": "nMnGcub1EKc2ItCjN7RQj5m3rSJRxGoC",
+        "domain": ".threads.com",
+        "path": "/",
+        "expires": 1785547038.273618,
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "Lax"
+    },
+    {
+        "name": "mid",
+        "value": "aF3xDwALAAFdlZ4w5Rf4Jd_jTw4d",
+        "domain": ".threads.com",
+        "path": "/",
+        "expires": 1785547032.047393,
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "Lax"
+    },
+    {
+        "name": "ds_user_id",
+        "value": "74021218330",
+        "domain": ".threads.com",
+        "path": "/",
+        "expires": 1758763038.273695,
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "None"
+    },
+    {
+        "name": "sessionid",
+        "value": "74021218330%3AeMX7ce9ZS9a70s%3A28%3AAYezbWY-Dy3hl2Oqmtk9cRjWIwCS_fhelVjB8nQmbw",
+        "domain": ".threads.com",
+        "path": "/",
+        "expires": 1782523032.047465,
+        "httpOnly": true,
+        "secure": true,
+        "sameSite": "Lax"
+    }
+]

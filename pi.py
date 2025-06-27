@@ -104,3 +104,16 @@
 #     if user_in_bool or s == 1:
 #         print(user_in_bool, user_list)
 # print(user_in_bool, user_list)
+
+import webview
+
+def main():
+    webview.create_window('---', "https://www.baidu.com/", height=650, width=760,
+                                   confirm_close=True)
+    chinese = {
+        'global.quitConfirmation': '确定关闭?',
+    }
+
+    webview.start(localization=chinese)
+if __name__ == "__main__":
+    main()
