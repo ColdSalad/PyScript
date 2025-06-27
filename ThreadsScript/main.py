@@ -23,7 +23,6 @@ async def main():
                 print("登录失败，无法继续执行任务")
                 return  # 直接返回，不再执行后续任务
         except Exception as e:
-            await crawler.login_with_gui()
             print(f"登录失败: {str(e)}")
             return  # 登录失败时直接返回
     else:
