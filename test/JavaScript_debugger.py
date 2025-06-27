@@ -210,7 +210,8 @@ class InstagramJSDebugger:
 
                                     # 点击元素
                                     selected_element.click()
-                                    time.sleep(1)  # 等待状态更新
+                                    selected_element.click()
+                                    time.sleep(3)  # 等待状态更新
 
                                     # 检查点击后的状态
                                     try:
