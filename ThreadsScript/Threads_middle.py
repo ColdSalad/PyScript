@@ -1,6 +1,9 @@
 import os
 import json
 import asyncio
+
+import requests
+
 from Threadsmain import Crawler
 def getCookie():
     if not os.path.exists("threads.json"):
@@ -10,9 +13,13 @@ def getCookie():
             return json.load(f)
         except:
             return None
-async def main():
+async def main(content1):
     cookies = getCookie()  # 从文件读取cookies
-    crawler = Crawler(cookies)
+    data = requests.get("https://th.ry188.vip/API/GetData.aspx?Account=" + content1, timeout=30).json()
+    message_limit = int(data["SendData"]["ConfigDatas"]["Home_HomeBrowseCount"])#主頁發送數
+    like = bool(data["SendData"]["ConfigDatas"]["Home_IsEnableLike"])#主頁點贊
+    comment = bool(data["SendData"]["ConfigDatas"]["Home_IsEnableLeave"])#主頁留言
+    crawler = Crawler(cookies,message_limit,like,comment)
 
     # 确保登录成功
     if cookies is None or not await crawler.check_cookies_valid():
@@ -33,11 +40,5 @@ async def main():
         await crawler.start()
     finally:
         # 确保关闭浏览器
-        if crawler.browser:
-            await crawler.browser.close()
-            print("浏览器已关闭")
-if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("完成！")
+        pass
+    return crawler
