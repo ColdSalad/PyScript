@@ -1,4 +1,4 @@
- #!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Instagram 点赞自动化
@@ -22,6 +22,14 @@ except ImportError:
     WEB_AUTOMATION_AVAILABLE = False
     print("⚠️ web_automation模块不可用，将使用内置登录功能")
 
+# 导入评论自动化模块
+try:
+    from instagram_comment_automation import InstagramCommentAutomation
+    COMMENT_AUTOMATION_AVAILABLE = True
+except ImportError:
+    COMMENT_AUTOMATION_AVAILABLE = False
+    print("⚠️ instagram_comment_automation模块不可用，将跳过评论功能")
+
 
 class InstagramLikeAutomation:
     """Instagram点赞自动化类 - 专注于点赞功能"""
@@ -31,6 +39,7 @@ class InstagramLikeAutomation:
         self.driver = None
         self.wait = None
         self.web_automation = None
+        self.comment_automation = None
 
     def setup_driver(self):
         """设置浏览器驱动"""
@@ -244,7 +253,41 @@ class InstagramLikeAutomation:
 
 
 
-    def perform_likes(self, max_likes=10):
+    def auto_comment_after_like(self, comment_text="很棒的分享！👍"):
+        """点赞后自动评论
+        
+        Args:
+            comment_text: 评论内容
+        
+        Returns:
+            bool: 是否成功评论
+        """
+        try:
+            if not COMMENT_AUTOMATION_AVAILABLE:
+                print("⚠️ 评论自动化模块不可用，跳过评论")
+                return False
+            
+            print(f"💬 开始自动评论: {comment_text}")
+            
+            # 初始化评论自动化实例（复用当前driver）
+            if not self.comment_automation:
+                self.comment_automation = InstagramCommentAutomation(self.driver)
+            
+            # 为当前帖子添加评论
+            success = self.comment_automation.add_comment_to_post(comment_text)
+            
+            if success:
+                print("✅ 自动评论成功")
+                return True
+            else:
+                print("❌ 自动评论失败")
+                return False
+                
+        except Exception as e:
+            print(f"❌ 自动评论过程中出错: {e}")
+            return False
+
+    def perform_likes(self, max_likes=10, enable_comment=False, comment_text="很棒的分享！👍"):
         """执行点赞操作"""
         try:
             print(f"🎯 开始执行点赞操作，最大点赞数: {max_likes}")
@@ -296,8 +339,16 @@ class InstagramLikeAutomation:
                             
                             print(f"✅ 第 {liked_count} 个点赞完成 - {before_aria}")
                             
+                            # 如果启用了评论功能，在点赞后自动评论
+                            if enable_comment:
+                                comment_success = self.auto_comment_after_like(comment_text)
+                                if comment_success:
+                                    print(f"💬 第 {liked_count} 个内容评论完成")
+                                else:
+                                    print(f"⚠️ 第 {liked_count} 个内容评论失败")
+                            
                             # 随机延迟，模拟人类行为
-                            delay = random.uniform(2, 5)
+                            delay = random.uniform(3, 6) if enable_comment else random.uniform(2, 5)
                             time.sleep(delay)
                             
                             # 检查点击后的状态变化
@@ -352,7 +403,7 @@ class InstagramLikeAutomation:
         except Exception as e:
             print(f"⚠️ 滚动页面失败: {e}")
 
-    def login_and_like(self, username, password, target_url="https://www.instagram.com/?next=%2F", max_likes=10):
+    def login_and_like(self, username, password, target_url="https://www.instagram.com/?next=%2F", max_likes=10, enable_comment=False, comment_text="很棒的分享！👍"):
         """完整的登录和点赞流程 - 复用现有登录功能"""
         try:
             print("=== Instagram 自动登录和点赞 ===")
@@ -397,7 +448,7 @@ class InstagramLikeAutomation:
                 print(f"⚠️ 导航过程中出现问题: {e}，尝试继续在当前页面点赞")
             
             # 4. 执行点赞操作
-            success, message = self.perform_likes(max_likes)
+            success, message = self.perform_likes(max_likes, enable_comment, comment_text)
             
             if success:
                 return True, f"登录和点赞操作成功完成！{message}"

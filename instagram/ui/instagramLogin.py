@@ -1,11 +1,5 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from PIL import Image, ImageTk, ImageDraw
-import requests
-from io import BytesIO
-import math
-import webbrowser
-import subprocess
 import os
 import sys
 import threading
@@ -195,7 +189,7 @@ class InstagramLoginGUI:
             if self.web_automation and hasattr(self.web_automation, 'driver') and self.web_automation.driver:
                 print("正在关闭浏览器...")
                 self.web_automation.close_browser()
-            
+
             # 清理点赞自动化实例
             if self.like_automation and hasattr(self.like_automation, 'driver') and self.like_automation.driver:
                 print("正在关闭点赞自动化浏览器...")
@@ -239,6 +233,8 @@ class InstagramLoginGUI:
 
         # 密码输入框
         self.create_enhanced_input_field(input_area, "密码", 'password', show='*')
+
+        # 评论功能已内置到代码中，无需UI选项
 
         # 登录按钮 - 使用Canvas创建圆角按钮
         self.create_rounded_login_button(input_area)
@@ -318,6 +314,8 @@ class InstagramLoginGUI:
         # 存储引用
         setattr(self, f'{field_name}_entry', entry)
 
+    # 评论功能相关方法已移除，评论内容直接在代码中设置
+
     def add_login_button_effects(self):
         """添加登录按钮悬停效果"""
         def on_enter(e):
@@ -348,7 +346,7 @@ class InstagramLoginGUI:
         entry = getattr(self, f'{field_name}_entry')
         value = entry.get()
         placeholder_map = {
-            'username': '用户名、邮箱或手机号',
+            'username': '用户名',
             'password': '密码'
         }
         if value == placeholder_map.get(field_name, ''):
@@ -429,7 +427,11 @@ class InstagramLoginGUI:
             # 使用默认设置
             max_likes = 10  # 默认点赞数量
             target_url = "https://www.instagram.com/?next=%2F"  # Instagram首页推荐页面
-            
+
+            # 评论功能设置（直接在代码中配置）
+            enable_comment = True  # 默认启用评论功能
+            comment_text = None  # 使用随机评论内容
+
             # 更新登录按钮状态
             self.login_btn.configure(text="正在登录并点赞...", state='disabled')
             self.root.update()
@@ -444,11 +446,14 @@ class InstagramLoginGUI:
                     print(f"   用户名: {username}")
                     print(f"   目标URL: {target_url}")
                     print(f"   最大点赞数: {max_likes}")
-                    
+                    print(f"   启用评论: {enable_comment}")
+                    if enable_comment:
+                        print(f"   评论内容: {comment_text}")
+
                     # 使用类实例变量保持引用
                     self.like_automation = InstagramLikeAutomation()
                     success, message = self.like_automation.login_and_like(
-                        username, password, target_url, max_likes
+                        username, password, target_url, max_likes, enable_comment, comment_text
                     )
 
                     # 在主线程中显示结果
@@ -474,24 +479,24 @@ class InstagramLoginGUI:
         """显示登录并点赞结果"""
         # 恢复登录按钮状态
         self.login_btn.configure(text="登录", state='normal')
-        
+
         if success:
             # 成功时显示详细提示
             print(f"✅ 点赞自动化成功: {message}")
             self.show_status_message(f"🎉 {message}！浏览器将保持打开状态，您可以查看操作结果", "success")
-            
+
             # 显示成功对话框
-            messagebox.showinfo("自动点赞成功", 
+            messagebox.showinfo("自动点赞成功",
                 f"✅ 登录和点赞操作已完成！\n\n{message}\n\n浏览器将保持打开状态，您可以继续浏览或手动操作。")
         else:
             # 如果失败，显示错误信息并提供选择
             print(f"❌ 点赞自动化失败: {message}")
             self.show_status_message(f"⚠️ 自动化失败: {message}", "error")
-            
+
             # 询问用户是否使用普通模式
-            result = messagebox.askyesno("自动化失败", 
+            result = messagebox.askyesno("自动化失败",
                 f"❌ 自动登录和点赞失败:\n{message}\n\n是否使用普通浏览器模式打开Instagram？")
-            
+
             if result:
                 # 用户选择使用普通模式
                 self.show_status_message("🔄 正在使用普通模式打开浏览器...", "info")
@@ -504,7 +509,7 @@ class InstagramLoginGUI:
         """显示自动填充结果"""
         # 恢复登录按钮状态
         self.login_btn.configure(text="登录", state='normal')
-        
+
         if success:
             # 成功时显示简洁提示，不需要用户确认
             self.show_status_message("✅ 已自动填入登录信息并点击登录按钮，请查看浏览器登录结果", "success")
@@ -525,7 +530,7 @@ class InstagramLoginGUI:
                 wraplength=320
             )
             self.status_label.pack(pady=(10, 0))
-        
+
         # 根据消息类型设置颜色
         if msg_type == "success":
             color = "#28a745"  # 绿色
@@ -535,10 +540,10 @@ class InstagramLoginGUI:
             color = "#dc3545"  # 红色
         else:
             color = "#6c757d"  # 灰色
-        
+
         self.status_label.configure(text=message, fg=color)
         self.status_label.pack(pady=(10, 0))
-        
+
         # 5秒后清除消息
         self.root.after(5000, lambda: self.clear_status_message())
 
@@ -598,25 +603,25 @@ class InstagramLoginGUI:
                     import os
                     test_dir = os.path.join(os.path.dirname(__file__), '..', 'test')
                     sys.path.append(test_dir)
-                    
+
                     from JavaScript_debugger import InstagramJSDebugger
-                    
+
                     # 创建调试器实例
                     debugger = InstagramJSDebugger()
-                    
+
                     # 设置登录信息（避免重复输入）
                     debugger._username = username
                     debugger._password = password
-                    
+
                     # 修改调试器的登录凭据获取方法
                     def get_cached_credentials():
                         return username, password
-                    
+
                     debugger.get_login_credentials = get_cached_credentials
-                    
+
                     # 启动调试器
                     debugger.run_debug()
-                    
+
                 except Exception as e:
                     error_msg = f"启动JavaScript调试器失败: {e}"
                     print(f"❌ {error_msg}")
@@ -625,7 +630,7 @@ class InstagramLoginGUI:
 
             # 显示启动提示
             self.show_status_message("🔧 正在启动JavaScript选择器调试器...", "info")
-            
+
             # 启动后台线程
             thread = threading.Thread(target=launch_debugger_thread, daemon=True)
             thread.start()
