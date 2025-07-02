@@ -33,8 +33,10 @@
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
-            <version>4.19.0</version>
+            <version>4.22.0</version>
         </dependency>
+
+
 
         <!-- Failsafe dependency - required for Selenium 4.x in modular Java projects -->
         <dependency>
@@ -63,6 +65,12 @@
             <version>5.10.2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.11.4</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -82,9 +90,10 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.ligg.modes.ui.InstagramLogin</mainClass>
+                    <mainClass>instagram.automation/com.ligg.modes.ui.InstagramLogin</mainClass>
                 </configuration>
             </plugin>
+
         </plugins>
     </build>
 </project>

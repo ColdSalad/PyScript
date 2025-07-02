@@ -6,6 +6,8 @@ module instagram.automation {
     requires org.seleniumhq.selenium.chrome_driver;
     requires org.slf4j;
     requires dev.failsafe.core;
+    requires org.junit.jupiter.api;
+
 
     exports com.ligg.modes.ui;
 }
