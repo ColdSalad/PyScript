@@ -8,6 +8,7 @@ module instagram.automation {
     requires dev.failsafe.core;
     requires org.junit.jupiter.api;
     requires org.seleniumhq.selenium.support;
+    requires com.google.common;
 
 
     exports com.ligg.modes.ui;

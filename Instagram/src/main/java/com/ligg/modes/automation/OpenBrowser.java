@@ -3,6 +3,7 @@ package com.ligg.modes.automation;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -52,13 +53,11 @@ public class OpenBrowser {
                 });
 
                 Thread.sleep(5000);
-                if(!driver.getCurrentUrl().equals("https://www.instagram.com/?next=%2F")){
+                if (!driver.getCurrentUrl().equals("https://www.instagram.com/?next=%2F")) {
                     driver.get("https://www.instagram.com/?next=%2F");
                     //点赞
-//                    like(driver);
+                    like(driver);
                 }
-                WebElement likeButton = driver.findElement(By.xpath("//*[@id=\"mount_0_0_Pg\"]/div/div/div[2]/div/div/div[1]/div[1]/div[1]/section/main/div[1]/div/div/div[2]/div/div[1]/div/article[1]/div/div[3]/div/div/section[1]/div[1]/span[1]/div/div"));
-                likeButton.click();
             } catch (InterruptedException e) {
                 log.error("网页加载超时");
             }
@@ -68,7 +67,7 @@ public class OpenBrowser {
     /**
      * 点赞方法
      */
-    public void like(WebDriver  driver) {
+    public void like(WebDriver driver) {
         try {
             // 等待页面加载
             Thread.sleep(3000);
