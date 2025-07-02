@@ -36,8 +36,6 @@
             <version>4.22.0</version>
         </dependency>
 
-
-
         <!-- Failsafe dependency - required for Selenium 4.x in modular Java projects -->
         <dependency>
             <groupId>dev.failsafe</groupId>
