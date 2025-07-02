@@ -5,16 +5,16 @@ Method模块包
 包含Instagram登录GUI的各种功能模块
 """
 
-from .browser_manager import BrowserManager, open_instagram, open_url, get_available_browsers
+from src.main.pythn.method.browser_manager import BrowserManager, open_instagram, open_url, get_available_browsers
 
 # 尝试导入网页自动化模块
 try:
-    from .web_automation import InstagramWebAutomation, auto_login_instagram
+    from src.main.pythn.method.web_automation import InstagramWebAutomation, auto_login_instagram
     SELENIUM_AVAILABLE = True
     __all__ = [
         'BrowserManager',
         'open_instagram',
-        'open_url', 
+        'open_url',
         'get_available_browsers',
         'InstagramWebAutomation',
         'auto_login_instagram'
@@ -24,9 +24,9 @@ except ImportError:
     __all__ = [
         'BrowserManager',
         'open_instagram',
-        'open_url', 
+        'open_url',
         'get_available_browsers'
     ]
 
 __version__ = "1.0.0"
-__author__ = "Instagram Login GUI" 
+__author__ = "Instagram Login GUI"
