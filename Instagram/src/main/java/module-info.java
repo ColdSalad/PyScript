@@ -7,6 +7,7 @@ module instagram.automation {
     requires org.slf4j;
     requires dev.failsafe.core;
     requires org.junit.jupiter.api;
+    requires org.seleniumhq.selenium.support;
 
 
     exports com.ligg.modes.ui;
