@@ -2,6 +2,7 @@ package com.ligg.modes.ui;
 
 import com.ligg.modes.automation.OpenBrowser;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -64,20 +65,27 @@ public class InstagramLogin extends Application {
             String password = passwordField.getText();
             if ( username.isEmpty() && password.isEmpty()){
                 //添加输入框为空提示
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("提示");
-                alert.setHeaderText("请输入用户名和密码");
-                alert.showAndWait();
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("提示");
+                    alert.setHeaderText("请输入用户名和密码");
+                    alert.showAndWait();
+                });
                 return;
             }
             if(username.length() < 6 || password.length() < 6){
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("提示");
-                alert.setHeaderText("用户名和密码长度不能小于6位");
-                alert.showAndWait();
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("提示");
+                    alert.setHeaderText("用户名和密码长度不能小于6位");
+                    alert.showAndWait();
+                });
                 return;
             }
-            openBrowser.Login(username,password);
+            loginButton.setDisable(true);
+            loginButton.setText("登录中...");
+            openBrowser.Login(username,password, loginButton);
+            //添加一个登录按钮状态
         });
 
         //将所有元素添加到根容器
