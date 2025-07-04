@@ -147,7 +147,6 @@
                             <jar>${project.build.directory}/${project.artifactId}-${project.version}.jar</jar>
                             <outfile>${project.build.directory}/Instagram-Automation.exe</outfile>
                             <downloadUrl>https://www.oracle.com/java/technologies/downloads/</downloadUrl>
-                            <mainClass>com.ligg.App</mainClass>
                             <!-- <icon>src/main/resources/image/instagram_logo.ico</icon> -->
                             <jre>
                                 <bundledJre64Bit>false</bundledJre64Bit>

@@ -72,9 +72,29 @@ public class OpenBrowser {
             // 等待页面加载
             Thread.sleep(3000);
             log.info("开始点赞...");
-            // 找到点赞按钮
-            WebElement likeButton = driver.findElement(By.xpath("//*[@id=\"mount_0_0_Pg\"]/div/div/div[2]/div/div/div[1]/div[1]/div[1]/section/main/div[1]/div/div/div[2]/div/div[1]/div/article[1]/div/div[3]/div/div/section[1]/div[1]/span[1]/div/div"));
-            likeButton.click();
+
+            // 使用JavaScript查找最近的可点击父按钮区域并点击
+            WebElement svgElement = driver.findElement(By.cssSelector("svg[aria-label='赞']"));
+            JavascriptExecutor jsExecutor = (JavascriptExecutor) driver;
+
+            // 查找最近的可点击父元素(button 或具有onclick属性的元素)
+            String script = "var element = arguments[0];" +
+                    "while (element.parentNode) {" +
+                    "  element = element.parentNode;" +
+                    "  if (element.tagName.toLowerCase() === 'button' || element.hasAttribute('onclick')) {" +
+                    "    return element;" +
+                    "  }" +
+                    "}" +
+                    "return null;";
+
+            WebElement clickableParent = (WebElement) jsExecutor.executeScript(script, svgElement);
+
+            if (clickableParent != null) {
+                jsExecutor.executeScript("arguments[0].click();", clickableParent);
+                log.info("成功点击点赞按钮");
+            } else {
+                log.warn("未找到可点击的父元素");
+            }
 
         } catch (InterruptedException e) {
             log.error("点赞过程中发生异常：{}", e.getMessage());
