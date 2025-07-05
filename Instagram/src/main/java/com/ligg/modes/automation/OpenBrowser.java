@@ -8,6 +8,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +56,9 @@ public class OpenBrowser {
 
                 Thread.sleep(5000);
                 if (!driver.getCurrentUrl().equals("https://www.instagram.com/?next=%2F")) {
-                    driver.get("https://www.instagram.com/?next=%2F");
+                    WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(10));
+                    var homeButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(1) > div > span > div > a > div")));
+                    homeButton.click();
                     //点赞
                     like(driver);
                 }
@@ -68,37 +72,13 @@ public class OpenBrowser {
      * 点赞方法
      */
     public void like(WebDriver driver) {
-        try {
-            // 等待页面加载
-            Thread.sleep(3000);
-            log.info("开始点赞...");
-
-            // 使用JavaScript查找最近的可点击父按钮区域并点击
-            WebElement svgElement = driver.findElement(By.cssSelector("svg[aria-label='赞']"));
-            JavascriptExecutor jsExecutor = (JavascriptExecutor) driver;
-
-            // 查找最近的可点击父元素(button 或具有onclick属性的元素)
-            String script = "var element = arguments[0];" +
-                    "while (element.parentNode) {" +
-                    "  element = element.parentNode;" +
-                    "  if (element.tagName.toLowerCase() === 'button' || element.hasAttribute('onclick')) {" +
-                    "    return element;" +
-                    "  }" +
-                    "}" +
-                    "return null;";
-
-            WebElement clickableParent = (WebElement) jsExecutor.executeScript(script, svgElement);
-
-            if (clickableParent != null) {
-                jsExecutor.executeScript("arguments[0].click();", clickableParent);
-                log.info("成功点击点赞按钮");
-            } else {
-                log.warn("未找到可点击的父元素");
-            }
-
-        } catch (InterruptedException e) {
-            log.error("点赞过程中发生异常：{}", e.getMessage());
-        }
+        // 等待页面加载
+        log.info("开始点赞...");
+        WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(10));
+        var likeButton  = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("html > body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > section > main > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > article:nth-of-type(1) > div > div:nth-of-type(3) > div > div > section:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(1) > div > div")));
+        likeButton.click();
+        likeButton.click();
+        log.info("点赞结束");
     }
 
 }
