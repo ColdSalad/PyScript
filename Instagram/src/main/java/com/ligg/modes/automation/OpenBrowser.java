@@ -73,9 +73,7 @@ public class OpenBrowser {
      */
     public void like(WebDriver driver, Button loginButton) {
         log.info("开始自动点赞...");
-        Platform.runLater(() -> {
-            loginButton.setText("点赞中...");
-        });
+        Platform.runLater(() -> loginButton.setText("点赞中..."));
         new WebDriverWait(driver, java.time.Duration.ofSeconds(10));
         JavascriptExecutor js = (JavascriptExecutor) driver;
 
