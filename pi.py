@@ -34,6 +34,7 @@
 #         )
 # faxinxi_shurubutton.click()
 # time.sleep(3)
+import random
 
 # import os
 # import platform
@@ -139,5 +140,13 @@ def GetHtmluser():
         for k in range(len(UserRequests["UserList"])):
             UserLists.append(UserRequests["UserList"][k]["name"])
     return UserLists
+def GetHtmlpic():
+    random_test = random.randint(0, len(data["SendData"]["ConfigDatas"]["SendPicList"]) - 1)
+    print(data["SendData"]["ConfigDatas"]["SendPicList"][random_test])
+    htmlpic = requests.get(data["SendData"]["ConfigDatas"]["SendPicList"][random_test],timeout=30)
+    with open("img.jpg", 'wb') as file:
+        file.write(htmlpic.content)
+    return
 v = GetHtmluser()
 print(v)
+GetHtmlpic()
