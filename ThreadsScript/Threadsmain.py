@@ -244,6 +244,7 @@ class Crawler:
         for i in range(len(self.UsersLists)):
             await self.page.goto(url="https://www.threads.com/@"+str(self.UsersLists[i]), wait_until='load')
             await asyncio.sleep(8)
+            #123
 
 def get_chrome_path():
     system = platform.system()
