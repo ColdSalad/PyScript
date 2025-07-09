@@ -25,8 +25,8 @@ def GetHtmluser(data):
 async def main(content1):
     cookies = getCookie()  # 从文件读取cookies
     data = requests.get("https://th.ry188.vip/API/GetData.aspx?Account=" + content1, timeout=30).json()
-    UsersLists = GetHtmluser(data)
-    crawler = Crawler(cookies,data,UsersLists)
+    userslists = GetHtmluser(data)
+    crawler = Crawler(cookies,data,userslists)
 
     # 确保登录成功
     if cookies is None or not await crawler.check_cookies_valid():

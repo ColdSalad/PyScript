@@ -12,7 +12,7 @@ from playwright.async_api import async_playwright
 
 
 class Crawler:
-    def __init__(self, cookies,data,UsersLists):
+    def __init__(self, cookies,data,userslists):
         self.username = None
         self.password = None
         self.browser = None
@@ -38,7 +38,7 @@ class Crawler:
         self.fans_num = bool(data["SendData"]["ConfigDatas"]["AtFansCount"])  # @粉丝数
         self.leave_text = data["SendData"]["ConfigDatas"]["MsgText"].split("\n\n\n")  # 发文内容
         self.leavetext_messags = str(data["SendData"]["LeaveText"]).split("\n\n\n")  # 留言内容
-        self.UsersLists = UsersLists
+        self.UsersLists = userslists
 
     async def start(self):
         playwright = await async_playwright().start()
