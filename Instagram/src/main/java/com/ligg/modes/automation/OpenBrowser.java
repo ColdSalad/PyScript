@@ -226,7 +226,7 @@ public class OpenBrowser {
                 // 即使找不到图标，也继续尝试，因为UI可能已经允许直接输入
             }
             boolean success = submitComment(driver, js, commentedCount);
-            closeCommentBox(js, driver);
+            closeCommentBox(js);
 
             return success;
         } catch (Exception e) {
@@ -266,7 +266,7 @@ public class OpenBrowser {
     /**
      * 关闭评论弹窗
      */
-    private void closeCommentBox(JavascriptExecutor js, WebDriver driver) {
+    private void closeCommentBox(JavascriptExecutor js) {
        //关闭弹窗
         String closeButtonSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.xo2ifbc.x10l6tqk.x1eu8d0j.x1vjfegm > div > div";
         js.executeScript("document.querySelector('" + closeButtonSelector + "').click();");
@@ -282,5 +282,4 @@ public class OpenBrowser {
             button.setDisable(false);
         });
     }
-
 }
