@@ -78,7 +78,7 @@ public class OpenBrowser {
         JavascriptExecutor js = (JavascriptExecutor) driver;
 
         int likedCount = 0; // 已点赞的帖子数
-        int maxLikes = 3; // 最多点赞10个帖子
+        int maxLikes = 1; // 最多点赞10个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 10; // 最多滚动20次
 
@@ -105,9 +105,7 @@ public class OpenBrowser {
                                 log.info("成功点赞第{}个帖子", likedCount);
                                 Thread.sleep(2000); // 点赞后等待2秒
 
-                                if (likedCount >= maxLikes) {
-                                    break;
-                                }
+                                break;
                             }
                         }
                     }
@@ -156,10 +154,10 @@ public class OpenBrowser {
         Platform.runLater(() -> loginButton.setText("评论中..."));
 
         JavascriptExecutor js = (JavascriptExecutor) driver;
-        int commentedCount = 0;
-        int maxComments = 5;
-        int scrollAttempts = 0;
-        int maxScrollAttempts = 15;
+        int commentedCount = 0; // 已评论的帖子数
+        int maxComments = 5; // 最多评论5个帖子
+        int scrollAttempts = 0; // 滚动次数
+        int maxScrollAttempts = 15; // 最多滚动15次
 
         try {
             while (commentedCount < maxComments && scrollAttempts < maxScrollAttempts) {
@@ -183,14 +181,17 @@ public class OpenBrowser {
             }
 
             log.info("评论完成，共评论{}个帖子", commentedCount);
-            updateButtonState(loginButton, "完成", false);
+            updateButtonState(loginButton, "完成");
 
         } catch (InterruptedException e) {
             log.error("评论过程中发生异常：{}", e.getMessage());
-            updateButtonState(loginButton, "评论失败", false);
+            updateButtonState(loginButton, "评论失败");
         }
     }
 
+    /**
+     * 评论单个帖子
+     */
     private boolean commentOnPost(WebElement svgElement, WebDriver driver, JavascriptExecutor js, int commentedCount) {
         try {
             if (!svgElement.isDisplayed()) {
@@ -211,23 +212,19 @@ public class OpenBrowser {
             // 点击弹窗中的评论按钮
             try {
                 WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(10));
-                String commentIconSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div.xb88tzc.xw2csxc.x1odjw0f.x5fp0pe.x1qjc9v5.xjbqb8w.xjwep3j.x1t39747.x1wcsgtt.x1pczhz8.xr1yuqi.x11t971q.x4ii5y1.xvc5jky.x15h9jz8.x47corl.xh8yej3.xir0mxb.x1juhsu6 > div > article > div > div.x1qjc9v5.x972fbf.x10w94by.x1qhh985.x14e42zd.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x5wqa0o.xln7xf2.xk390pu.xdj266r.x14z9mp.xat24cr.x1lziwak.x65f84u.x1vq45kp.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1n2onr6.x11njtxf > div > div > div.x78zum5.xdt5ytf.x1q2y9iw.x1n2onr6.xh8yej3.x9f619.x1iyjqo2.x13lttk3.x1t7ytsu.xpilrb4.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1b5io7h > section.x78zum5.x1q0g3np.xwib8y2.x1yrsyyn.x1xp8e9x.x13fuv20.x178xt8z.xdj266r.x14z9mp.xat24cr.x1lziwak.xo1ph6p.xv54qhq.xf7dkkf > span:nth-child(2) > div > div > svg";
-                WebElement commentIconInPopup = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(commentIconSelector)));
+                // 等待弹窗出现
+                WebElement commentModal = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div[role='dialog']")));
+                // 在弹窗中查找评论图标
+                WebElement commentIconInPopup = commentModal.findElement(By.cssSelector("svg[aria-label='评论']"));
                 WebElement clickableCommentButton = findClickableParent(commentIconInPopup, js);
                 if (clickableCommentButton != null) {
                     js.executeScript("arguments[0].click();", clickableCommentButton);
-                    Thread.sleep(1000);
-                } else {
-                    log.warn("在弹窗中未找到可点击的评论按钮");
-                    closeCommentBox(js, driver);
-                    return false;
+                    Thread.sleep(1000); // 等待输入框出现
                 }
             } catch (Exception e) {
-                log.warn("在弹窗中点击评论图标失败: {}", e.getMessage());
-                closeCommentBox(js, driver);
-                return false;
+                log.warn("在弹窗中未找到或无法点击评论图标，将直接尝试输入评论。");
+                // 即使找不到图标，也继续尝试，因为UI可能已经允许直接输入
             }
-
             boolean success = submitComment(driver, js, commentedCount);
             closeCommentBox(js, driver);
 
@@ -238,31 +235,24 @@ public class OpenBrowser {
         }
     }
 
-    private boolean submitComment(WebDriver driver, JavascriptExecutor js, int commentedCount) throws InterruptedException {
+    /**
+     * 提交评论
+     */
+    private boolean submitComment(WebDriver driver, JavascriptExecutor js, int commentedCount) {
         String[] comments = {"很棒的分享！", "太有趣了！", "喜欢这个内容！", "非常不错！", "很有意思！"};
         WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(10));
 
         try {
             String commentInputSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div.xb88tzc.xw2csxc.x1odjw0f.x5fp0pe.x1qjc9v5.xjbqb8w.xjwep3j.x1t39747.x1wcsgtt.x1pczhz8.xr1yuqi.x11t971q.x4ii5y1.xvc5jky.x15h9jz8.x47corl.xh8yej3.xir0mxb.x1juhsu6 > div > article > div > div.x1qjc9v5.x972fbf.x10w94by.x1qhh985.x14e42zd.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x5wqa0o.xln7xf2.xk390pu.xdj266r.x14z9mp.xat24cr.x1lziwak.x65f84u.x1vq45kp.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1n2onr6.x11njtxf > div > div > div.x78zum5.xdt5ytf.x1q2y9iw.x1n2onr6.xh8yej3.x9f619.x1iyjqo2.x13lttk3.x1t7ytsu.xpilrb4.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1b5io7h > section.x5ur3kl.x13fuv20.x178xt8z.x1roi4f4.x2lah0s.xvs91rp.xl56j7k.x17ydfre.x1n2onr6.x10b6aqq.x1yrsyyn.x1hrcb2b.xv54qhq > div > form > div > textarea";
             WebElement commentInput = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(commentInputSelector)));
-
             String commentText = comments[commentedCount % comments.length];
-            js.executeScript("arguments[0].value = '';", commentInput); // Clear with JS
-            js.executeScript("arguments[0].value = arguments[1];", commentInput, commentText);
-            // Manually trigger input event to let React know about the change
-            js.executeScript("arguments[0].dispatchEvent(new Event('input', { bubbles: true }));", commentInput);
+            //输入评论
+            commentInput.sendKeys(commentText);
             Thread.sleep(1000);
 
-            try {
-                WebElement postButton = driver.findElement(By.xpath("//button[contains(text(),'发布') or contains(text(),'Post')]"));
-                if (postButton.isEnabled()) {
-                    postButton.click();
-                }
-            } catch (Exception e) {
-                log.warn("未找到发布按钮，尝试按Enter键发布评论");
-                commentInput.sendKeys("\n");
-            }
-
+            //发送评论
+            String postSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div.xb88tzc.xw2csxc.x1odjw0f.x5fp0pe.x1qjc9v5.xjbqb8w.xjwep3j.x1t39747.x1wcsgtt.x1pczhz8.xr1yuqi.x11t971q.x4ii5y1.xvc5jky.x15h9jz8.x47corl.xh8yej3.xir0mxb.x1juhsu6 > div > article > div > div.x1qjc9v5.x972fbf.x10w94by.x1qhh985.x14e42zd.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x5wqa0o.xln7xf2.xk390pu.xdj266r.x14z9mp.xat24cr.x1lziwak.x65f84u.x1vq45kp.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1n2onr6.x11njtxf > div > div > div.x78zum5.xdt5ytf.x1q2y9iw.x1n2onr6.xh8yej3.x9f619.x1iyjqo2.x13lttk3.x1t7ytsu.xpilrb4.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1b5io7h > section.x5ur3kl.x13fuv20.x178xt8z.x1roi4f4.x2lah0s.xvs91rp.xl56j7k.x17ydfre.x1n2onr6.x10b6aqq.x1yrsyyn.x1hrcb2b.xv54qhq > div > form > div > div.x13fj5qh > div";
+            js.executeScript("document.querySelector('" + postSelector + "').click();");
             log.info("成功评论第{}个帖子: {}", commentedCount + 1, commentText);
             Thread.sleep(3000);
             return true;
@@ -273,21 +263,23 @@ public class OpenBrowser {
         }
     }
 
+    /**
+     * 关闭评论弹窗
+     */
     private void closeCommentBox(JavascriptExecutor js, WebDriver driver) {
-        try {
-            WebElement closeButton = driver.findElement(By.cssSelector("svg[aria-label='关闭'], button[aria-label='关闭']"));
-            js.executeScript("arguments[0].click();", closeButton);
-            Thread.sleep(1000);
-        } catch (Exception e) {
-            log.debug("未找到关闭按钮，可能评论框已自动关闭，尝试按ESC键");
-            js.executeScript("document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'}));");
-        }
+       //关闭弹窗
+        String closeButtonSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.xo2ifbc.x10l6tqk.x1eu8d0j.x1vjfegm > div > div";
+        js.executeScript("document.querySelector('" + closeButtonSelector + "').click();");
+        log.info("关闭评论弹窗");
     }
 
-    private void updateButtonState(Button button, String text, boolean disable) {
+    /**
+     * 更新按钮状态
+     */
+    private void updateButtonState(Button button, String text) {
         Platform.runLater(() -> {
             button.setText(text);
-            button.setDisable(disable);
+            button.setDisable(false);
         });
     }
 
