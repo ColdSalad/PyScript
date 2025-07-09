@@ -154,10 +154,10 @@ public class OpenBrowser {
         Platform.runLater(() -> loginButton.setText("评论中..."));
 
         JavascriptExecutor js = (JavascriptExecutor) driver;
-        int commentedCount = 0;
-        int maxComments = 5;
-        int scrollAttempts = 0;
-        int maxScrollAttempts = 15;
+        int commentedCount = 0; // 已评论的帖子数
+        int maxComments = 5; // 最多评论5个帖子
+        int scrollAttempts = 0; // 滚动次数
+        int maxScrollAttempts = 15; // 最多滚动15次
 
         try {
             while (commentedCount < maxComments && scrollAttempts < maxScrollAttempts) {
@@ -273,6 +273,9 @@ public class OpenBrowser {
         log.info("关闭评论弹窗");
     }
 
+    /**
+     * 更新按钮状态
+     */
     private void updateButtonState(Button button, String text) {
         Platform.runLater(() -> {
             button.setText(text);
