@@ -269,6 +269,10 @@ class Crawler:
         try:
             base_selector = "#barcelona-page-layout > div > div > div.xb57i2i.x1q594ok.x5lxg6s.x1ja2u2z.x1pq812k.x1rohswg.xfk6m8.x1yqm8si.xjx87ck.x1l7klhg.xs83m0k.x2lwn1j.xx8ngbg.xwo3gff.x1oyok0e.x1odjw0f.x1n2onr6.xq1qtft.xz401s1.x195bbgf.xgb0k9h.x1l19134.xgjo3nb.x1ga7v0g.x15mokao.x18b5jzi.x1q0q8m5.x1t7ytsu.x1ejq31n.xt8cgyo.x128c8uf.x1co6499.xc5fred.x1ma7e2m.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.xy5w88m.xh8yej3.xbwb3hm.xgh35ic.x19xvnzb.x87ppg5.xev1tu8.xpr2fh2.xgzc8be.x1iorvi4 > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div:nth-child(2) > div > div:nth-child(1)"
             element = await self.page.wait_for_selector(base_selector, timeout=10000)
+            text = await self.page.locator(base_selector).inner_text()
+            print("获取的文本：", text)
+            if text =="已关注" or text =="追蹤中":
+                return
             if element:
                 await element.scroll_into_view_if_needed()
                 await asyncio.sleep(1)
@@ -277,6 +281,7 @@ class Crawler:
             await asyncio.sleep(8)
         except Exception as e:
             print(f"使用完整路径选择器也失败: {str(e)}")
+            return
 
     async def UsersFans(self):
         try:
@@ -290,6 +295,8 @@ class Crawler:
             await asyncio.sleep(8)
         except Exception as e:
             print(f"使用完整路径选择器也失败: {str(e)}")
+            return
+
     async def UsersLike(self,number,htmljs):
         out_count = 0
         self.message_limit = number
