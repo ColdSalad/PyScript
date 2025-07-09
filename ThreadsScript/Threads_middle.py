@@ -1,6 +1,7 @@
 import os
 import json
 import asyncio
+import random
 
 import requests
 
@@ -13,13 +14,19 @@ def getCookie():
             return json.load(f)
         except:
             return None
+def GetHtmluser(data):
+    UserLists = []
+    getuser_num = 10
+    for i in range(len(data["UserInFIdList"])):
+        UserRequests  =  requests.get("https://th.ry188.vip/API/GetUserList.aspx?Count="+str(getuser_num)+"&Id="+str(data["UserInFIdList"][i]["Id"]),timeout=30).json()
+        for k in range(len(UserRequests["UserList"])):
+            UserLists.append(UserRequests["UserList"][k]["name"])
+    return UserLists
 async def main(content1):
     cookies = getCookie()  # 从文件读取cookies
     data = requests.get("https://th.ry188.vip/API/GetData.aspx?Account=" + content1, timeout=30).json()
-    message_limit = int(data["SendData"]["ConfigDatas"]["Home_HomeBrowseCount"])#主頁發送數
-    like = bool(data["SendData"]["ConfigDatas"]["Home_IsEnableLike"])#主頁點贊
-    comment = bool(data["SendData"]["ConfigDatas"]["Home_IsEnableLeave"])#主頁留言
-    crawler = Crawler(cookies,message_limit,like,comment)
+    UsersLists = GetHtmluser(data)
+    crawler = Crawler(cookies,data,UsersLists)
 
     # 确保登录成功
     if cookies is None or not await crawler.check_cookies_valid():

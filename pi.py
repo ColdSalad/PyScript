@@ -125,9 +125,19 @@ print(type(data))
 print(bool(data["SendData"]["ConfigDatas"]["Home_IsEnableLike"]))
 print(bool(data["SendData"]["ConfigDatas"]["Home_IsEnableLeave"]))
 print(int(data["SendData"]["ConfigDatas"]["Home_HomeBrowseCount"]))
-content1 = "as"
-content2 = "as"
-login = requests.get("http://aj.ry188.vip/api/Login.aspx?Account="+content1+"&PassWord="+content2 ,timeout=10).text
-if "no" in login :
-    print("登录失败")
-print("nn",login)
+# content1 = "as"
+# content2 = "as"
+# login = requests.get("http://aj.ry188.vip/api/Login.aspx?Account="+content1+"&PassWord="+content2 ,timeout=10).text
+# if "no" in login :
+#     print("登录失败")
+# print("nn",login)
+def GetHtmluser():
+    UserLists = []
+    getuser_num = 10
+    for i in range(len(data["UserInFIdList"])):
+        UserRequests  =  requests.get("https://th.ry188.vip/API/GetUserList.aspx?Count="+str(getuser_num)+"&Id="+str(data["UserInFIdList"][i]["Id"]),timeout=30).json()
+        for k in range(len(UserRequests["UserList"])):
+            UserLists.append(UserRequests["UserList"][k]["name"])
+    return UserLists
+v = GetHtmluser()
+print(v)
