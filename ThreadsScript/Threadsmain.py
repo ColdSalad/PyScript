@@ -49,6 +49,7 @@ class Crawler:
 
         # 应用cookies到上下文
         if self.cookies:
+
             await context.add_cookies(self.cookies)
             print("已应用cookies到浏览器上下文")
         print("已确认登录状态，开始执行任务...")
