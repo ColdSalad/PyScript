@@ -130,4 +130,4 @@ content2 = "as"
 login = requests.get("http://aj.ry188.vip/api/Login.aspx?Account="+content1+"&PassWord="+content2 ,timeout=10).text
 if "no" in login :
     print("登录失败")
-print(login)
+print("nn",login)
