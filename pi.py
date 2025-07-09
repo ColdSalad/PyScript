@@ -105,15 +105,29 @@
 #         print(user_in_bool, user_list)
 # print(user_in_bool, user_list)
 
-import webview
+# import webview
+#
+# def main():
+#     webview.create_window('---', "https://www.baidu.com/", height=650, width=760,
+#                                    confirm_close=True)
+#     chinese = {
+#         'global.quitConfirmation': '确定关闭?',
+#     }
+#
+#     webview.start(localization=chinese)
+# if __name__ == "__main__":
+#     main()
 
-def main():
-    webview.create_window('---', "https://www.baidu.com/", height=650, width=760,
-                                   confirm_close=True)
-    chinese = {
-        'global.quitConfirmation': '确定关闭?',
-    }
-
-    webview.start(localization=chinese)
-if __name__ == "__main__":
-    main()
+import requests
+admin = "272275"
+data = requests.get("https://th.ry188.vip/API/GetData.aspx?Account="+admin,timeout=30).json()
+print(type(data))
+print(bool(data["SendData"]["ConfigDatas"]["Home_IsEnableLike"]))
+print(bool(data["SendData"]["ConfigDatas"]["Home_IsEnableLeave"]))
+print(int(data["SendData"]["ConfigDatas"]["Home_HomeBrowseCount"]))
+content1 = "as"
+content2 = "as"
+login = requests.get("http://aj.ry188.vip/api/Login.aspx?Account="+content1+"&PassWord="+content2 ,timeout=10).text
+if "no" in login :
+    print("登录失败")
+print(login)

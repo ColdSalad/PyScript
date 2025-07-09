@@ -11,7 +11,7 @@ from playwright.async_api import async_playwright
 
 
 class Crawler:
-    def __init__(self, cookies):
+    def __init__(self, cookies,message_limit,like,comment):
         self.username = None
         self.password = None
         self.browser = None
@@ -20,6 +20,9 @@ class Crawler:
         self.delay = 25
         self.is_logged_in = False
         self.browser_path = get_chrome_path()
+        self.message_limit = message_limit
+        self.home_like = like
+        self.home_comment = comment
 
     async def start(self):
         playwright = await async_playwright().start()
@@ -35,7 +38,7 @@ class Crawler:
 
         self.page = await context.new_page()
         await self.page.goto(url="https://www.threads.com/", wait_until='load')
-        await asyncio.sleep(5)
+        await asyncio.sleep(8)
 
         print("已确认登录状态，开始执行任务...")
         await self.automate_clicks()
@@ -43,8 +46,9 @@ class Crawler:
     async def automate_clicks(self):
         """执行自动化点击操作"""
         print("开始执行自动化点击...")
-        try:
-            for i in range(1, 11):
+        out_count = 0
+        for i in range(1, self.message_limit + 1):
+            try:
                 selector = f"#barcelona-page-layout > div > div > div.xb57i2i.x1q594ok.x5lxg6s.x1ja2u2z.x1pq812k.x1rohswg.xfk6m8.x1yqm8si.xjx87ck.x1l7klhg.xs83m0k.x2lwn1j.xx8ngbg.xwo3gff.x1oyok0e.x1odjw0f.x1n2onr6.xq1qtft.xz401s1.x195bbgf.xgb0k9h.x1l19134.xgjo3nb.x1ga7v0g.x15mokao.x18b5jzi.x1q0q8m5.x1t7ytsu.x1ejq31n.xt8cgyo.x128c8uf.x1co6499.xc5fred.x1ma7e2m.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.xy5w88m.xh8yej3.xbwb3hm.xgh35ic.x19xvnzb.x87ppg5.xev1tu8.xpr2fh2.xgzc8be.x1y1aw1k > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div.x1c1b4dv.x13dflua.x11xpdln > div > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div:nth-child({i}) > div > div > div > div > div.x1xdureb.xkbb5z.x13vxnyz > div > div.x4vbgl9.x1qfufaz.x1k70j0n > div > div:nth-child(1) > div"
                 element = await self.page.wait_for_selector(selector, timeout=10000)
 
@@ -54,10 +58,13 @@ class Crawler:
                     await element.click()
                     print(f"使用完整路径成功点击第 {i} 个元素")
                     await asyncio.sleep(5)
-        except Exception as e:
-            print(f"使用完整路径选择器也失败: {str(e)}")
+            except Exception as e:
+                print(f"使用完整路径选择器也失败: {str(e)}")
+                out_count += 1
+                if out_count == 3:
+                    break
+                continue
 
-    # 其他方法保持不变...
     async def check_cookies_valid(self):
         """检查cookies是否有效"""
         try:
