@@ -37,13 +37,13 @@ public class InstagramLogin extends Application {
         //创建一个垂直盒子布局作为根容器
         VBox root = new VBox(20);
         root.setAlignment(Pos.CENTER);
-        root.setPadding(new Insets(40, 40, 40, 40));
+        root.setPadding(new Insets(20, 20, 20, 20));
 
         //添加Logo
         Image logoImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/image/instagram_logo.jpg")));
         ImageView logo = new ImageView(logoImage);
         logo.setFitHeight(80);
-        logo.setFitWidth(180);
+        logo.setFitWidth(80);
         logo.setPreserveRatio(true);
 
         //创建输入框
