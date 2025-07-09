@@ -244,8 +244,112 @@ class Crawler:
         for i in range(len(self.UsersLists)):
             await self.page.goto(url="https://www.threads.com/@"+str(self.UsersLists[i]), wait_until='load')
             await asyncio.sleep(8)
-            #123
 
+            if self.user_Tracking:
+                print("追踪")
+            if self.fans:
+                print("@粉丝")
+            if self.Like:
+                print("点赞")
+                number = 1
+                htmljs = "#barcelona-page-layout > div > div > div.xb57i2i.x1q594ok.x5lxg6s.x1ja2u2z.x1pq812k.x1rohswg.xfk6m8.x1yqm8si.xjx87ck.x1l7klhg.xs83m0k.x2lwn1j.xx8ngbg.xwo3gff.x1oyok0e.x1odjw0f.x1n2onr6.xq1qtft.xz401s1.x195bbgf.xgb0k9h.x1l19134.xgjo3nb.x1ga7v0g.x15mokao.x18b5jzi.x1q0q8m5.x1t7ytsu.x1ejq31n.xt8cgyo.x128c8uf.x1co6499.xc5fred.x1ma7e2m.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.xy5w88m.xh8yej3.xbwb3hm.xgh35ic.x19xvnzb.x87ppg5.xev1tu8.xpr2fh2.xgzc8be.x1iorvi4 > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div.x1c1b4dv.x13dflua.x11xpdln > div > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div:nth-child({}) > div > div > div > div > div.x1xdureb.xkbb5z.x13vxnyz > div > div.x4vbgl9.x1qfufaz.x1k70j0n > div "
+                await self.UsersLike(number, htmljs)
+
+            if self.Leave:
+                print("留言")
+                number = 1
+                htmljs = "#barcelona-page-layout > div > div > div.xb57i2i.x1q594ok.x5lxg6s.x1ja2u2z.x1pq812k.x1rohswg.xfk6m8.x1yqm8si.xjx87ck.x1l7klhg.xs83m0k.x2lwn1j.xx8ngbg.xwo3gff.x1oyok0e.x1odjw0f.x1n2onr6.xq1qtft.xz401s1.x195bbgf.xgb0k9h.x1l19134.xgjo3nb.x1ga7v0g.x15mokao.x18b5jzi.x1q0q8m5.x1t7ytsu.x1ejq31n.xt8cgyo.x128c8uf.x1co6499.xc5fred.x1ma7e2m.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.xy5w88m.xh8yej3.xbwb3hm.xgh35ic.x19xvnzb.x87ppg5.xev1tu8.xpr2fh2.xgzc8be.x1iorvi4 > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div.x1c1b4dv.x13dflua.x11xpdln > div > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div:nth-child({}) > div > div > div > div > div.x1xdureb.xkbb5z.x13vxnyz > div > div.x4vbgl9.x1qfufaz.x1k70j0n > div "
+                htmljsinput = "#barcelona-page-layout > div > div > div.xb57i2i.x1q594ok.x5lxg6s.x1ja2u2z.x1pq812k.x1rohswg.xfk6m8.x1yqm8si.xjx87ck.x1l7klhg.xs83m0k.x2lwn1j.xx8ngbg.xwo3gff.x1oyok0e.x1odjw0f.x1n2onr6.xq1qtft.xz401s1.x195bbgf.xgb0k9h.x1l19134.xgjo3nb.x1ga7v0g.x15mokao.x18b5jzi.x1q0q8m5.x1t7ytsu.x1ejq31n.xt8cgyo.x128c8uf.x1co6499.xc5fred.x1ma7e2m.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.xy5w88m.xh8yej3.xbwb3hm.xgh35ic.x19xvnzb.x87ppg5.xev1tu8.xpr2fh2.xgzc8be.x1iorvi4 > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div.x1c1b4dv.x13dflua.x11xpdln > div > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div:nth-child({}) > div > div > div > div > div.x49hn82.xcrlgei.xz9dl7a.xsag5q8 > div > div > div.x78zum5.xdt5ytf.xfp3qos.xh8yej3 > div > div.x78zum5.x1cvoeml.xdt5ytf.xh8yej3 > div.x1ed109x.x7r5mf7.xh8yej3 > div > div.xzsf02u.xw2csxc.x1odjw0f.x1n2onr6.x1hnll1o.xpqswwc.notranslate"
+                htmljsbut = "#barcelona-page-layout > div > div > div.xb57i2i.x1q594ok.x5lxg6s.x1ja2u2z.x1pq812k.x1rohswg.xfk6m8.x1yqm8si.xjx87ck.x1l7klhg.xs83m0k.x2lwn1j.xx8ngbg.xwo3gff.x1oyok0e.x1odjw0f.x1n2onr6.xq1qtft.xz401s1.x195bbgf.xgb0k9h.x1l19134.xgjo3nb.x1ga7v0g.x15mokao.x18b5jzi.x1q0q8m5.x1t7ytsu.x1ejq31n.xt8cgyo.x128c8uf.x1co6499.xc5fred.x1ma7e2m.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.xy5w88m.xh8yej3.xbwb3hm.xgh35ic.x19xvnzb.x87ppg5.xev1tu8.xpr2fh2.xgzc8be.x1iorvi4 > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div.x1c1b4dv.x13dflua.x11xpdln > div > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div:nth-child({}) > div > div > div > div > div.x49hn82.xcrlgei.xz9dl7a.xsag5q8 > div > div > div.x78zum5.xdt5ytf.xfp3qos.xh8yej3 > div > div.xuk3077.x78zum5.xdt5ytf.x1qughib.x1yrsyyn > div > div.x1i10hfl.xjqpnuy.xc5r6h4.xqeqjp1.x1phubyo.x13fuv20.x18b5jzi.x1q0q8m5.x1t7ytsu.x972fbf.x10w94by.x1qhh985.x14e42zd.x1ypdohk.xdl72j9.x2lah0s.xe8uvvx.xdj266r.x14z9mp.xat24cr.x1lziwak.x2lwn1j.xeuugli.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1n2onr6.x16tdsg8.x1hl2dhg.xggy1nq.x1ja2u2z.x1t137rt.x1q0g3np.x1lku1pv.x1a2a7pz.x6s0dn4.x9f619.x3nfvp2.x1s688f.xl56j7k.x87ps6o.xuxw1ft.x111bo7f.x1c9tyrk.xeusxvb.x1pahc9y.x1ertn4p.x10w6t97.xx6bhzk.x12w9bfk.x11xpdln.x1td3qas.xd3so5o.x1lcra6a"
+                await self.UsersLeave(number, htmljs, htmljsinput, htmljsbut)
+
+    async def UsersLike(self,number,htmljs):
+        out_count = 0
+        self.message_limit = number
+        for i in range(1, self.message_limit + 1):
+            try:
+                base_selector = htmljs
+                # 定位帖子元素
+                post_selector = base_selector.format(i)
+                element = await self.page.wait_for_selector(post_selector, timeout=10000)
+                if element:
+                    await element.scroll_into_view_if_needed()
+                    await asyncio.sleep(1)
+                    if self.home_like:  # 點贊
+                        like_selector = post_selector + " > div:nth-child(1) > div"
+                        like_btn = await self.page.wait_for_selector(like_selector, timeout=5000)
+                        if like_btn:
+                            await like_btn.click()
+                            print(f"成功点赞第 {i} 个帖子")
+                            await asyncio.sleep(2)
+
+                await asyncio.sleep(8)
+            except Exception as e:
+                print(f"使用完整路径选择器也失败: {str(e)}")
+                out_count += 1
+                if out_count == 3:
+                    break
+                continue
+    async def UsersLeave(self,number,htmljs,htmljsinput,htmljsbut):
+        out_count = 0
+        self.message_limit = number
+        for i in range(1, self.message_limit + 1):
+            try:
+                base_selector = htmljs
+                # 定位帖子元素
+                post_selector = base_selector.format(i)
+                element = await self.page.wait_for_selector(post_selector, timeout=10000)
+                if element:
+                    await element.scroll_into_view_if_needed()
+                    await asyncio.sleep(1)
+
+                    if self.home_comment:  # 留言
+                        comment_selector = post_selector + " > div:nth-child(2) > div"
+                        comment_btn = await self.page.wait_for_selector(comment_selector, timeout=5000)
+                        if comment_btn:
+                            await comment_btn.click()
+                            print(f"成功点击留言按钮第 {i} 个帖子")
+
+                            # 等待留言框出现
+                            await asyncio.sleep(2)
+                            # 定位留言框并输入内容
+                            comment_box_selector = htmljsinput.format(
+                                i)
+                            comment_box = await self.page.wait_for_selector(comment_box_selector, timeout=5000)
+
+                            if comment_box:
+                                # 输入留言内容
+                                await comment_box.click()
+
+                                random_test = random.randint(0, len(self.leavetext_messags) - 1)
+
+                                await comment_box.fill(self.leavetext_messags[random_test])
+                                print(f"已输入留言内容: {self.leavetext_messags[random_test]}")
+
+                                # 等待发送按钮出现
+                                await asyncio.sleep(2)
+
+                                # 定位并点击发送按钮
+                                send_button_selector = htmljsbut.format(
+                                    i)
+                                send_button = await self.page.wait_for_selector(send_button_selector, timeout=5000)
+
+                                if send_button:
+                                    await send_button.click()
+                                    print(f"成功发送留言第 {i} 个帖子")
+                                    # 等待留言发送完成
+                                    await asyncio.sleep(2)
+                                else:
+                                    print(f"发送按钮未找到，第 {i} 个帖子")
+                            else:
+                                print(f"留言框未找到，第 {i} 个帖子")
+                await asyncio.sleep(8)
+            except Exception as e:
+                print(f"使用完整路径选择器也失败: {str(e)}")
+                out_count += 1
+                if out_count == 3:
+                    break
+                continue
 def get_chrome_path():
     system = platform.system()
 
