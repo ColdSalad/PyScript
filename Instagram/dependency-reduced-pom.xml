@@ -65,13 +65,9 @@
             </goals>
             <configuration>
               <headerType>gui</headerType>
-              <jar>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</jar>
+              <jar>${project.build.directory}/${project.artifactId}-${project.version}.jar</jar>
               <outfile>${project.build.directory}/Instagram-Automation.exe</outfile>
               <downloadUrl>https://www.oracle.com/java/technologies/downloads/</downloadUrl>
-              <classPath>
-                <mainClass>com.ligg.App</mainClass>
-                <preCp>anything</preCp>
-              </classPath>
               <jre>
                 <bundledJre64Bit>false</bundledJre64Bit>
                 <bundledJreAsFallback>false</bundledJreAsFallback>

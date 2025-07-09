@@ -10,6 +10,5 @@ module instagram.automation {
     requires org.seleniumhq.selenium.support;
     requires com.google.common;
 
-
     exports com.ligg.modes.ui;
 }

@@ -12,7 +12,6 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.List;
 
 
@@ -183,7 +182,6 @@ public class OpenBrowser {
 
                 if (!commentButtons.isEmpty()) {
                     for (WebElement svgElement : commentButtons) {
-                        try {
                             // 检查元素是否可见
                             if (svgElement.isDisplayed()) {
                                 // 滚动到元素位置
@@ -257,9 +255,6 @@ public class OpenBrowser {
                                     }
                                 }
                             }
-                        } catch (Exception e) {
-                            log.warn("评论单个帖子时出现异常: {}", e.getMessage());
-                        }
                     }
                 }
 

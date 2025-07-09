@@ -26,7 +26,9 @@ import java.util.Objects;
  **/
 public class InstagramLogin extends Application {
 
-    private static final OpenBrowser openBrowser = new OpenBrowser();
+    private static final OpenBrowser
+            openBrowser = new OpenBrowser();
+
     @Override
     public void start(Stage stage) {
         //设置窗口标题
@@ -63,7 +65,7 @@ public class InstagramLogin extends Application {
         loginButton.setOnAction(event -> {
             String username = usernameField.getText();
             String password = passwordField.getText();
-            if ( username.isEmpty() && password.isEmpty()){
+            if (username.isEmpty() && password.isEmpty()) {
                 //添加输入框为空提示
                 Platform.runLater(() -> {
                     Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -73,7 +75,7 @@ public class InstagramLogin extends Application {
                 });
                 return;
             }
-            if(username.length() < 6 || password.length() < 6){
+            if (username.length() < 6 || password.length() < 6) {
                 Platform.runLater(() -> {
                     Alert alert = new Alert(Alert.AlertType.WARNING);
                     alert.setTitle("提示");
@@ -84,12 +86,12 @@ public class InstagramLogin extends Application {
             }
             loginButton.setDisable(true);
             loginButton.setText("登录中...");
-            openBrowser.Login(username,password, loginButton);
+            openBrowser.Login(username, password, loginButton);
             //添加一个登录按钮状态
         });
 
         //将所有元素添加到根容器
-        root.getChildren().addAll(logo,usernameField,passwordField,loginButton);
+        root.getChildren().addAll(logo, usernameField, passwordField, loginButton);
 
         //创建容器设置样式
         Scene scene = new Scene(root, 400, 500);
