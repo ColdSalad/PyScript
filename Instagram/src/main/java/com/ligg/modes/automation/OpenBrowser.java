@@ -1,5 +1,6 @@
 package com.ligg.modes.automation;
 
+import com.ligg.modes.http_request.HttpRequest;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
 import org.openqa.selenium.By;
@@ -104,7 +105,6 @@ public class OpenBrowser {
                                 likedCount++;
                                 log.info("成功点赞第{}个帖子", likedCount);
                                 Thread.sleep(2000); // 点赞后等待2秒
-
                                 break;
                             }
                         }
