@@ -13,4 +13,6 @@ module instagram.automation {
     requires com.google.gson;
 
     exports com.ligg.modes.ui;
+    exports com.ligg.modes.pojo to com.google.gson;
+    opens com.ligg.modes.pojo to com.google.gson;
 }

@@ -94,11 +94,11 @@ public class InstagramLogin extends Application {
 
             // 登录成功，关闭当前窗口并打开Instagram登录界面
             stage.close();
-            
+
             // 创建新的Stage用于Instagram登录界面
             Platform.runLater(() -> {
                 Stage instagramStage = new Stage();
-                LoginUi.createInstagramLoginUI(instagramStage);
+                LoginUi.createInstagramLoginUI(instagramStage,username);
             });
         });
 

@@ -1,6 +1,7 @@
 package com.ligg.modes.automation;
 
 import com.ligg.modes.http_request.HttpRequest;
+import com.ligg.modes.pojo.Data;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
 import org.openqa.selenium.By;
@@ -14,6 +15,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.List;
 
 
@@ -26,9 +28,13 @@ public class OpenBrowser {
     private static final Logger log = LoggerFactory.getLogger(OpenBrowser.class);
     private WebDriver driver;
 
+    private static final HttpRequest httpRequest = new HttpRequest();
+    private String adminUsername;
 
+    private   Data data = null;
     //打开浏览器
-    public void Login(String username, String password, Button loginButton) {
+    public void Login(String username, String password, Button loginButton, String adminUsername) {
+        this.adminUsername = adminUsername;
         //创建一个线程用于打开浏览器，避免GUI阻塞主线程
         new Thread(() -> {
             try {
@@ -56,7 +62,7 @@ public class OpenBrowser {
 
                 Thread.sleep(5000);
                 if (!driver.getCurrentUrl().equals("https://www.instagram.com/?next=%2F")) {
-                    WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(10));
+                    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
                     var homeButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(1) > div > span > div > a > div")));
                     homeButton.click();
 
@@ -73,13 +79,16 @@ public class OpenBrowser {
      * 点赞方法 - 自动滚动页面并对多个帖子点赞
      */
     public void like(WebDriver driver, Button loginButton) {
+        Data data = httpRequest.getData(adminUsername);
+        this.data = data;
         log.info("开始自动点赞...");
         Platform.runLater(() -> loginButton.setText("点赞中..."));
-        new WebDriverWait(driver, java.time.Duration.ofSeconds(10));
+        new WebDriverWait(driver, Duration.ofSeconds(10));
         JavascriptExecutor js = (JavascriptExecutor) driver;
 
+        Data.ConfigDatas configDatas = data.getSendData().getConfigDatas();
         int likedCount = 0; // 已点赞的帖子数
-        int maxLikes = 1; // 最多点赞10个帖子
+        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 10; // 最多滚动20次
 
@@ -211,7 +220,7 @@ public class OpenBrowser {
 
             // 点击弹窗中的评论按钮
             try {
-                WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(10));
+                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
                 // 等待弹窗出现
                 WebElement commentModal = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div[role='dialog']")));
                 // 在弹窗中查找评论图标
@@ -239,8 +248,8 @@ public class OpenBrowser {
      * 提交评论
      */
     private boolean submitComment(WebDriver driver, JavascriptExecutor js, int commentedCount) {
-        String[] comments = {"很棒的分享！", "太有趣了！", "喜欢这个内容！", "非常不错！", "很有意思！"};
-        WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(10));
+        String[] comments = this.data.getSendData().getLeaveText().split("\\n\\n\\n");
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
         try {
             String commentInputSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div.xb88tzc.xw2csxc.x1odjw0f.x5fp0pe.x1qjc9v5.xjbqb8w.xjwep3j.x1t39747.x1wcsgtt.x1pczhz8.xr1yuqi.x11t971q.x4ii5y1.xvc5jky.x15h9jz8.x47corl.xh8yej3.xir0mxb.x1juhsu6 > div > article > div > div.x1qjc9v5.x972fbf.x10w94by.x1qhh985.x14e42zd.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x5wqa0o.xln7xf2.xk390pu.xdj266r.x14z9mp.xat24cr.x1lziwak.x65f84u.x1vq45kp.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1n2onr6.x11njtxf > div > div > div.x78zum5.xdt5ytf.x1q2y9iw.x1n2onr6.xh8yej3.x9f619.x1iyjqo2.x13lttk3.x1t7ytsu.xpilrb4.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1b5io7h > section.x5ur3kl.x13fuv20.x178xt8z.x1roi4f4.x2lah0s.xvs91rp.xl56j7k.x17ydfre.x1n2onr6.x10b6aqq.x1yrsyyn.x1hrcb2b.xv54qhq > div > form > div > textarea";

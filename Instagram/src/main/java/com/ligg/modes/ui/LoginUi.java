@@ -30,13 +30,13 @@ public class LoginUi extends Application {
 
     @Override
     public void start(Stage stage) {
-        createInstagramLoginUI(stage);
+        createInstagramLoginUI(stage,null);
     }
 
     /**
      * 创建Instagram登录界面
      */
-    public static void createInstagramLoginUI(Stage stage) {
+    public static void createInstagramLoginUI(Stage stage,String adminUsername) {
         //设置窗口标题
         stage.setTitle("Instagram 登录");
         //设置icon
@@ -87,7 +87,7 @@ public class LoginUi extends Application {
             loginButton.setDisable(true);
 
             // 调用自动化登录
-            openBrowser.Login(username, password, loginButton);
+            openBrowser.Login(username, password, loginButton, adminUsername);
         });
 
         //将所有元素添加到根容器

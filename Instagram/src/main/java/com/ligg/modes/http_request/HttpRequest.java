@@ -55,7 +55,7 @@ public class HttpRequest {
                 return gson.fromJson(responseBody,Data.class);
             }
         } catch (Exception e) {
-            log.error("获取数据失败");
+            log.error("获取数据失败",e);
         }
         return null;
     }
