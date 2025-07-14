@@ -120,33 +120,43 @@ import random
 #     main()
 
 import requests
+import random
+import os
+
 admin = "272275"
-data = requests.get("https://th.ry188.vip/API/GetData.aspx?Account="+admin,timeout=30).json()
-print(type(data))
-print(bool(data["SendData"]["ConfigDatas"]["Home_IsEnableLike"]))
-print(bool(data["SendData"]["ConfigDatas"]["Home_IsEnableLeave"]))
-print(int(data["SendData"]["ConfigDatas"]["Home_HomeBrowseCount"]))
-# content1 = "as"
-# content2 = "as"
-# login = requests.get("http://aj.ry188.vip/api/Login.aspx?Account="+content1+"&PassWord="+content2 ,timeout=10).text
-# if "no" in login :
-#     print("登录失败")
-# print("nn",login)
+data = requests.get("https://th.ry188.vip/API/GetData.aspx?Account=" + admin, timeout=30).json()
 def GetHtmluser():
     UserLists = []
     getuser_num = 10
     for i in range(len(data["UserInFIdList"])):
-        UserRequests  =  requests.get("https://th.ry188.vip/API/GetUserList.aspx?Count="+str(getuser_num)+"&Id="+str(data["UserInFIdList"][i]["Id"]),timeout=30).json()
+        UserRequests = requests.get(
+            "https://th.ry188.vip/API/GetUserList.aspx?Count=" + str(getuser_num) + "&Id=" + str(
+                data["UserInFIdList"][i]["Id"]), timeout=30).json()
         for k in range(len(UserRequests["UserList"])):
             UserLists.append(UserRequests["UserList"][k]["name"])
     return UserLists
+
 def GetHtmlpic():
-    random_test = random.randint(0, len(data["SendData"]["ConfigDatas"]["SendPicList"]) - 1)
-    print(data["SendData"]["ConfigDatas"]["SendPicList"][random_test])
-    htmlpic = requests.get(data["SendData"]["ConfigDatas"]["SendPicList"][random_test],timeout=30)
-    with open("img.jpg", 'wb') as file:
-        file.write(htmlpic.content)
-    return
-v = GetHtmluser()
-print(v)
-GetHtmlpic()
+    # 创建img文件夹（如果不存在）
+    if not os.path.exists('img'):
+        os.makedirs('img')
+    if len(data["SendData"]["ConfigDatas"]["SendPicList"]) > 0:
+        random_test = random.randint(0, len(data["SendData"]["ConfigDatas"]["SendPicList"]) - 1)
+        print(data["SendData"]["ConfigDatas"]["SendPicList"][random_test])
+        # 下载图片
+        htmlpic = requests.get(data["SendData"]["ConfigDatas"]["SendPicList"][random_test], timeout=30)
+        # 图片保存路径
+        img_path = os.path.join('img', 'img.jpg')
+        # 保存图片
+        with open(img_path, 'wb') as file:
+            file.write(htmlpic.content)
+
+        # 返回图片的绝对路径
+        return os.path.abspath(img_path)
+
+# 调用函数并获取图片路径
+image_path = GetHtmlpic()
+print(f"图片已保存到：{image_path}")
+message_pic = True
+if message_pic and image_path is not None :
+    print(222)

@@ -172,7 +172,7 @@ class MyApp(QWidget):
             return  # 终止函数执行
         login = requests.get("http://aj.ry188.vip/api/Login.aspx?Account=" + content1 + "&PassWord=" + content2,
                              timeout=15).text
-        if "no" in login:
+        if "no" in login or "ok" in login:
             QMessageBox.warning(self, "登錄错误", "错误：賬號或密碼錯誤！", QMessageBox.Ok)
             return
         # 所有验证通过后的处理
@@ -182,19 +182,10 @@ class MyApp(QWidget):
         # 启动异步任务后，不关闭窗口，而是隐藏窗口
         self.hide()  # 隐藏窗口而非关闭
         try:
-            crawler = await main(content1)
-            reply = QMessageBox.question(
-                self, "關閉確認", "確認要關閉程序嗎？",
-                QMessageBox.Yes | QMessageBox.No, QMessageBox.No
-            )
-            if reply == QMessageBox.Yes:
-                self.close()
+            await main(content1)
         except Exception as e:
             QMessageBox.critical(self, "错误", f"任务执行失败: {str(e)}", QMessageBox.Ok)
         finally:
-            if crawler and crawler.browser:
-                await crawler.browser.close()
-                print("浏览器已关闭")
             self.close()
 
 def win_main(version,day):
