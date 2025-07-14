@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -31,7 +32,8 @@ public class OpenBrowser {
     private static final HttpRequest httpRequest = new HttpRequest();
     private String adminUsername;
 
-    private   Data data = null;
+    private Data data = null;
+
     //打开浏览器
     public void Login(String username, String password, Button loginButton, String adminUsername) {
         this.adminUsername = adminUsername;
@@ -87,56 +89,59 @@ public class OpenBrowser {
         JavascriptExecutor js = (JavascriptExecutor) driver;
 
         Data.ConfigDatas configDatas = data.getSendData().getConfigDatas();
+        String Home_IsEnableLike = configDatas.getHome_IsEnableLike();
         int likedCount = 0; // 已点赞的帖子数
         int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 10; // 最多滚动20次
+        if (Objects.equals(Home_IsEnableLike, "true")) {
+            try {
+                while (likedCount < maxLikes && scrollAttempts < maxScrollAttempts) {
+                    // 查找所有未点赞的按钮（通过aria-label="赞"识别）
+                    List<WebElement> likeButtons = driver.findElements(By.cssSelector("svg[aria-label='赞']"));
 
-        try {
-            while (likedCount < maxLikes && scrollAttempts < maxScrollAttempts) {
-                // 查找所有未点赞的按钮（通过aria-label="赞"识别）
-                List<WebElement> likeButtons = driver.findElements(By.cssSelector("svg[aria-label='赞']"));
+                    if (!likeButtons.isEmpty()) {
+                        for (WebElement svgElement : likeButtons) {
+                            // 检查元素是否可见且可点击
+                            if (svgElement.isDisplayed()) {
+                                // 滚动到元素位置
+                                js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", svgElement);
+                                Thread.sleep(1000); // 等待滚动完成
 
-                if (!likeButtons.isEmpty()) {
-                    for (WebElement svgElement : likeButtons) {
-                        // 检查元素是否可见且可点击
-                        if (svgElement.isDisplayed()) {
-                            // 滚动到元素位置
-                            js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", svgElement);
-                            Thread.sleep(1000); // 等待滚动完成
+                                // 查找可点击的父元素（通常是button）
+                                WebElement clickableParent = findClickableParent(svgElement, js);
 
-                            // 查找可点击的父元素（通常是button）
-                            WebElement clickableParent = findClickableParent(svgElement, js);
-
-                            if (clickableParent != null) {
-                                // 使用JavaScript点击，避免元素被遮挡的问题
-                                js.executeScript("arguments[0].click();", clickableParent);
-                                likedCount++;
-                                log.info("成功点赞第{}个帖子", likedCount);
-                                Thread.sleep(2000); // 点赞后等待2秒
-                                break;
+                                if (clickableParent != null) {
+                                    // 使用JavaScript点击，避免元素被遮挡的问题
+                                    js.executeScript("arguments[0].click();", clickableParent);
+                                    likedCount++;
+                                    log.info("成功点赞第{}个帖子", likedCount);
+                                    Thread.sleep(2000); // 点赞后等待2秒
+                                    break;
+                                }
                             }
                         }
                     }
+
+                    // 如果还没达到目标数量，继续滚动页面
+                    if (likedCount < maxLikes) {
+                        log.info("滚动页面加载更多帖子...");
+                        js.executeScript("window.scrollBy(0, 800);"); // 向下滚动800像素
+                        Thread.sleep(3000); // 等待页面加载
+                        scrollAttempts++;
+                    }
                 }
 
-                // 如果还没达到目标数量，继续滚动页面
-                if (likedCount < maxLikes) {
-                    log.info("滚动页面加载更多帖子...");
-                    js.executeScript("window.scrollBy(0, 800);"); // 向下滚动800像素
-                    Thread.sleep(3000); // 等待页面加载
-                    scrollAttempts++;
-                }
-            }
-
-            log.info("点赞完成，共点赞{}个帖子", likedCount);
+                log.info("点赞完成，共点赞{}个帖子", likedCount);
             /*
              开始评论
              */
-            comment(driver, loginButton);
-        } catch (InterruptedException e) {
-            log.error("点赞过程中发生异常：{}", e.getMessage());
+                comment(driver, loginButton);
+            } catch (InterruptedException e) {
+                log.error("点赞过程中发生异常：{}", e.getMessage());
+            }
         }
+        comment(driver, loginButton);
     }
 
     /**
@@ -276,7 +281,7 @@ public class OpenBrowser {
      * 关闭评论弹窗
      */
     private void closeCommentBox(JavascriptExecutor js) {
-       //关闭弹窗
+        //关闭弹窗
         String closeButtonSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.xo2ifbc.x10l6tqk.x1eu8d0j.x1vjfegm > div > div";
         js.executeScript("document.querySelector('" + closeButtonSelector + "').click();");
         log.info("关闭评论弹窗");
