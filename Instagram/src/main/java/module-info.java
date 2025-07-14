@@ -9,6 +9,10 @@ module instagram.automation {
     requires org.junit.jupiter.api;
     requires org.seleniumhq.selenium.support;
     requires com.google.common;
+    requires okhttp3;
+    requires com.google.gson;
 
     exports com.ligg.modes.ui;
+    exports com.ligg.modes.pojo to com.google.gson;
+    opens com.ligg.modes.pojo to com.google.gson;
 }

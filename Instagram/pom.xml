@@ -43,6 +43,18 @@
             <version>3.3.2</version>
         </dependency>
 
+        <!--okhttp-->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.10.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.9</version>
+        </dependency>
 
         <!--日志-->
         <dependency>
@@ -145,7 +157,7 @@
                         <configuration>
                             <headerType>gui</headerType>
                             <jar>${project.build.directory}/${project.artifactId}-${project.version}.jar</jar>
-                            <outfile>${project.build.directory}/Instagram-Automation.exe</outfile>
+                            <outfile>${project.build.directory}/Instagram.exe</outfile>
                             <downloadUrl>https://www.oracle.com/java/technologies/downloads/</downloadUrl>
                             <!-- <icon>src/main/resources/image/instagram_logo.ico</icon> -->
                             <jre>
@@ -162,16 +174,15 @@
                                 <copyright>2025 Ligg</copyright>
                                 <productVersion>1.0.0.0</productVersion>
                                 <txtProductVersion>${project.version}</txtProductVersion>
-                                <productName>Instagram Automation</productName>
+                                <productName>Instagram</productName>
                                 <companyName>Ligg</companyName>
-                                <internalName>instagram-automation</internalName>
-                                <originalFilename>Instagram-Automation.exe</originalFilename>
+                                <internalName>instagram</internalName>
+                                <originalFilename>Instagram.exe</originalFilename>
                             </versionInfo>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
 </project>
