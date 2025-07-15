@@ -42,7 +42,7 @@ def GetHtmlpic(data):
         # 下载图片
         htmlpic = requests.get(data["SendData"]["ConfigDatas"]["SendPicList"][random_test], timeout=30)
         # 图片保存路径
-        img_path = os.path.join('img', 'img.jpg')
+        img_path = os.path.join('img', 'image.png')
         # 保存图片
         with open(img_path, 'wb') as file:
             file.write(htmlpic.content)

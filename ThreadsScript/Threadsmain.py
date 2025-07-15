@@ -8,7 +8,9 @@ import os
 import winreg  # 仅适用于Windows
 import shutil  # 适用于Linux和macOS
 from PyQt5.QtWidgets import QApplication
-
+from PIL import Image
+from io import BytesIO
+import win32clipboard
 from Threads_loginwin import win_main
 from playwright.async_api import async_playwright
 
@@ -57,7 +59,8 @@ class Crawler:
         self.update_status("啟動瀏覽器...")
         playwright = await async_playwright().start()
         self.browser = await playwright.chromium.launch(headless=False, executable_path=self.browser_path,
-        args=['--start-minimized'])
+                                                        args=['--start-minimized'],
+        ignore_default_args=["--enable-automation"])
         context = await self.browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
         )
@@ -69,7 +72,7 @@ class Crawler:
             print("已应用cookies到浏览器上下文")
         print("已确认登录状态，开始执行任务...")
         self.page = await context.new_page()
-
+        # await self.force_minimize_browser()
         if self.home_Browse :
             self.update_status("開始主頁留言...")
             await self.automate_clicks()#个人主页留言
@@ -78,9 +81,14 @@ class Crawler:
             self.update_status("開始關鍵字留言...")
             print("关键字")#关键字
             await self.message_key()
+
         if self.is_message :
             self.update_status("開始個人發文...")
             print("个人发文")#个人发文
+            await self.Personal_is_message()
+            htmljsinput = '//div[@contenteditable="true" and @aria-placeholder="有什麼新鮮事？"or @contenteditable="true" and @aria-placeholder="有什麼新鮮事嗎？" or @contenteditable="true" and @aria-placeholder="有什么新鲜事？" or @contenteditable="true" and @aria-placeholder="有什么新鲜事吗？"]/p'
+            htmljsbut = '//div[text()="發佈" or text()="发布"]'
+            await self.Personal_post(htmljsinput, htmljsbut)
 
         await self.Usersmissing()  # 用户个人主页留言
 
@@ -188,9 +196,10 @@ class Crawler:
         """使用浏览器执行登录"""
         try:
             playwright = await async_playwright().start()
-            self.browser = await playwright.chromium.launch(headless=False, executable_path=self.browser_path)
-            self.page = await self.browser.new_page(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            self.browser = await playwright.chromium.launch(
+                headless=False,
+                executable_path=self.browser_path,
+                args=['--start-minimized']  # 确保浏览器启动时最小化
             )
 
             await self.page.goto(url="https://www.threads.net/login", wait_until='load')
@@ -272,7 +281,9 @@ class Crawler:
     async def Usersmissing(self):
         self.update_status("開始用戶個人主頁留言...")
         for i in range(len(self.UsersLists)):
+            self.update_status(f"打開用戶：@{self.UsersLists[i]} 主頁")
             await self.page.goto(url="https://www.threads.com/@"+str(self.UsersLists[i]), wait_until='load')
+            # await self.force_minimize_browser()
             await asyncio.sleep(8)
 
             if self.user_Tracking and self.new_user_Tracking_num < self.user_Tracking_num:
@@ -283,7 +294,7 @@ class Crawler:
                 self.update_status("@粉絲發送信息...")
                 print("@粉丝")
                 await self.UsersFans()
-                htmljsinput = '//div[@contenteditable="true" and @aria-placeholder="有什麼新鮮事嗎？" or @contenteditable="true" and @aria-placeholder="有什么新鲜事吗？"]/p/span[2]'
+                htmljsinput = '//div[@contenteditable="true" and @aria-placeholder="有什麼新鮮事？"or @contenteditable="true" and @aria-placeholder="有什麼新鮮事嗎？" or @contenteditable="true" and @aria-placeholder="有什么新鲜事？" or @contenteditable="true" and @aria-placeholder="有什么新鲜事吗？"]/p/span[2]'
                 htmljsbut = '//div[text()="發佈" or text()="发布"]'
                 await self.Personal_post(htmljsinput, htmljsbut)
             if self.Like:
@@ -398,6 +409,7 @@ class Crawler:
                                 random_test = random.randint(0, len(self.leavetext_messags) - 1)
 
                                 await comment_box.fill(self.leavetext_messags[random_test])
+                                self.update_status(f"留言內容: {self.leavetext_messags[random_test]}")
                                 print(f"已输入留言内容: {self.leavetext_messags[random_test]}")
 
                                 # 等待发送按钮出现
@@ -427,6 +439,7 @@ class Crawler:
 
     async def Personal_post(self, htmljsinput, htmljsbut):
         print("输入框")
+        self.update_status("開始尋找文本框...")
         try:
             # 等待留言框出现
             await asyncio.sleep(2)
@@ -443,14 +456,17 @@ class Crawler:
                 random_test = random.randint(0, len(self.leave_text) - 1)
 
                 await comment_box.fill(self.leave_text[random_test])
-
+                self.update_status(f"留言內容: {self.leave_text[random_test]}")
                 print(f"已输入留言内容: {self.leave_text[random_test]}")
 
                 if self.message_pic and self.pic_path is not None :
-
                     await asyncio.sleep(2)
-
-                    await comment_box.set_input_files(self.pic_path)
+                    # copy_image_to_clipboard(self.pic_path)
+                    # 备选方案：使用文件选择器
+                    file_input = await self.page.query_selector('input[type="file"]')
+                    if file_input:
+                        await file_input.set_input_files(self.pic_path)
+                        self.update_status("通过文件选择器上传图片")
 
                     print(f"已输入图片地址: {self.pic_path}")
                 # 等待发送按钮出现
@@ -552,6 +568,78 @@ class Crawler:
                     if out_count == 3:
                         break
                     continue
+    async def Personal_is_message(self):
+        await self.page.goto(url="https://www.threads.com/", wait_until='load')
+        await asyncio.sleep(8)
+        try:
+            # 等待點擊發文框出现
+            await asyncio.sleep(2)
+            # 定位點擊發文框
+            comment_box_selector = '//div/div[@role="button"]'
+            comment_box = await self.page.wait_for_selector(comment_box_selector, timeout=5000)
+
+            if comment_box:
+                # 定位帖子元素
+                await comment_box.scroll_into_view_if_needed()
+                await comment_box.click()
+
+            else:
+                print(f"點擊發文框未找到")
+            await asyncio.sleep(8)
+        except Exception as e:
+            print(f"使用完整路径选择器也失败: {str(e)}")
+    # 添加新的辅助方法
+    def minimize_browser_window(self):
+        """最小化浏览器窗口（平台特定实现）"""
+        try:
+            system = platform.system()
+            if system == "Windows":
+                import win32gui, win32con
+                # 获取浏览器窗口句柄
+                time.sleep(1)  # 等待窗口创建
+                hwnd = win32gui.GetForegroundWindow()
+                if hwnd:
+                    win32gui.ShowWindow(hwnd, win32con.SW_MINIMIZE)
+            elif system == "Darwin":  # macOS
+                import subprocess
+                subprocess.run(["osascript", "-e",
+                                'tell application "System Events" to set visible of process "Google Chrome" to false'])
+            # Linux 系统需要额外的窗口管理器支持，这里暂不处理
+        except Exception as e:
+            print(f"最小化窗口失败: {e}")
+
+    async def force_minimize_browser(self):
+        """强制最小化浏览器窗口"""
+        # 先尝试通过Playwright的方式
+        try:
+            if self.browser:
+                # 获取所有页面
+                pages = self.browser.contexts[0].pages if self.browser.contexts else []
+                for page in pages:
+                    # 尝试最小化窗口
+                    await page.evaluate("""() => {
+                        if (window.moveTo && window.resizeTo) {
+                            window.moveTo(-2000, -2000);
+                            window.resizeTo(1, 1);
+                        }
+                    }""")
+        except:
+            pass
+
+        # 再使用平台特定的方法
+        self.minimize_browser_window()
+
+def copy_image_to_clipboard(img_path: str):
+    '''输入文件名，执行后，将图片复制到剪切板'''
+    image = Image.open(img_path)
+    output = BytesIO()
+    image.save(output, 'BMP')
+    data = output.getvalue()[14:]
+    output.close()
+    win32clipboard.OpenClipboard()
+    win32clipboard.EmptyClipboard()
+    win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
+    win32clipboard.CloseClipboard()
 
 def parse_bool(type_data):
     type_data = str(type_data).lower().strip()
