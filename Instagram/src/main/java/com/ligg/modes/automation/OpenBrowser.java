@@ -93,7 +93,7 @@ public class OpenBrowser {
         int likedCount = 0; // 已点赞的帖子数
         int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
         int scrollAttempts = 0; // 滚动次数
-        int maxScrollAttempts = 10; // 最多滚动20次
+        int maxScrollAttempts = 10; // 最多滚动次
         if (Objects.equals(Home_IsEnableLike, "true")) {
             try {
                 while (likedCount < maxLikes && scrollAttempts < maxScrollAttempts) {
@@ -278,6 +278,14 @@ public class OpenBrowser {
     }
 
     /**
+     * 进入个人首页
+     */
+    private void goToProfilePage(WebDriver driver, JavascriptExecutor js) {
+
+    }
+
+
+    /**
      * 关闭评论弹窗
      */
     private void closeCommentBox(JavascriptExecutor js) {
@@ -296,4 +304,6 @@ public class OpenBrowser {
             button.setDisable(false);
         });
     }
+
+
 }
