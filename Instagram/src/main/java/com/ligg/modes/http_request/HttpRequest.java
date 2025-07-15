@@ -37,7 +37,6 @@ public class HttpRequest {
         } catch (Exception e) {
             log.error("发送登录请求失败");
         }
-        ;
         return null;
     }
 
@@ -66,7 +65,7 @@ public class HttpRequest {
     /**
      * getProfilePage
      */
-    public static ProfilePage getProfilePage(Integer Count, Integer id) {
+    public ProfilePage getProfilePage(Integer Count, Integer id) {
         OkHttpClient client = new OkHttpClient();
         String url = String.format("https://ig.ry188.vip/API/GetUserList.aspx?Count=%s&id=%s", Count, id);
         Request request = new Request.Builder()
@@ -75,7 +74,6 @@ public class HttpRequest {
         try (Response response = client.newCall(request).execute()) {
             if (response.body() != null) {
                 String responseBody = response.body().string();
-                log.info("API响应内容: {}", responseBody);
 
                 // 检查响应是否为空或错误消息
                 if (responseBody.trim().isEmpty()) {
@@ -90,10 +88,5 @@ public class HttpRequest {
             log.error("获取用户列表失败", e);
         }
         return null;
-    }
-
-    public static void main(String[] args) {
-        ProfilePage profilePage = getProfilePage(10, 1);
-        System.out.println(profilePage.getUserList());
     }
 }

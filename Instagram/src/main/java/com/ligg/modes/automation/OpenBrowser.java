@@ -2,6 +2,7 @@ package com.ligg.modes.automation;
 
 import com.ligg.modes.http_request.HttpRequest;
 import com.ligg.modes.pojo.Data;
+import com.ligg.modes.pojo.ProfilePage;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
 import org.openqa.selenium.By;
@@ -281,7 +282,22 @@ public class OpenBrowser {
      * 进入个人首页
      */
     private void goToProfilePage(WebDriver driver, JavascriptExecutor js) {
+        ProfilePage profilePage = httpRequest.getProfilePage(10, 2);
+        if (profilePage != null) {
+            for (ProfilePage.User user : profilePage.getUserList()) {
+                String userId = user.getUser_id();
+                String userName = user.getUser_name();
+                String userFullName = user.getUser_fullname();
+                String instagramId = user.getInstagram_id();
+                String instagraminfId = user.getInstagraminf_id();
+                String createdAt = user.getCreated_at();
+                int types = user.getTypes();
 
+                driver.get("https://www.instagram.com/" + userName);
+                log.info("进入用户主页: {}", userName);
+
+            }
+        }
     }
 
 
