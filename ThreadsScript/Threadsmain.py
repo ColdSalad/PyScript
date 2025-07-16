@@ -201,21 +201,21 @@ class Crawler:
                 executable_path=self.browser_path,
                 args=['--start-minimized']  # 确保浏览器启动时最小化
             )
-
-            await self.page.goto(url="https://www.threads.net/login", wait_until='load')
+            page = await self.browser.new_page()
+            await page.goto(url="https://www.threads.net/login", wait_until='load')
             await asyncio.sleep(1)
 
             # 输入凭证
-            await self.page.locator("form input").first.fill(self.username)
-            await self.page.locator("form input").nth(1).fill(self.password)
-            await self.page.click("form div[role='button']")
+            await page.locator("form input").first.fill(self.username)
+            await page.locator("form input").nth(1).fill(self.password)
+            await page.click("form div[role='button']")
 
             # 检查登录是否成功
             try:
-                await self.page.wait_for_url("https://www.threads.net/?login_success=true", timeout=25000)
+                await page.wait_for_url("https://www.threads.net/?login_success=true", timeout=25000)
                 self.is_logged_in = True
             except:
-                current_url = await self.page.evaluate("() => window.location.href")
+                current_url = await page.evaluate("() => window.location.href")
                 if "login" in current_url or "challenge" in current_url:
                     print(f"登录失败，当前URL: {current_url}")
                     self.is_logged_in = False
@@ -223,7 +223,7 @@ class Crawler:
                     raise Exception("登录失败，请检查用户名和密码")
 
             # 登录成功处理
-            self.cookies = await self.page.context.cookies()
+            self.cookies = await page.context.cookies()
             with open("threads.json", "w") as f:
                 json.dump(self.cookies, f, indent=4)
 

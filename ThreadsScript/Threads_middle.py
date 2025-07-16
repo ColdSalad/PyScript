@@ -33,6 +33,7 @@ def GetHtmluser(data):
 
 
 async def main(content1):
+
     cookies = getCookie()  # 从文件读取cookies
     data = requests.get("https://th.ry188.vip/API/GetData.aspx?Account=" + content1, timeout=30).json()
     userslists = GetHtmluser(data)
