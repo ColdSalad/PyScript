@@ -95,6 +95,9 @@ public class OpenBrowser {
         int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 10; // 最多滚动次
+        String HuDong_IsEnableMsg = configDatas.getHuDong_IsEnableMsg(); //是否私信
+
+        //点赞
         if (Objects.equals(Home_IsEnableLike, "true")) {
             try {
                 while (likedCount < maxLikes && scrollAttempts < maxScrollAttempts) {
@@ -142,7 +145,14 @@ public class OpenBrowser {
                 log.error("点赞过程中发生异常：{}", e.getMessage());
             }
         }
+
+        //评论
         comment(driver, loginButton);
+
+        //私信
+        if (Objects.equals(HuDong_IsEnableMsg, "true")) {
+            goToProfilePage(driver, js);
+        }
     }
 
     /**
@@ -170,7 +180,7 @@ public class OpenBrowser {
 
         JavascriptExecutor js = (JavascriptExecutor) driver;
         int commentedCount = 0; // 已评论的帖子数
-        int maxComments = 5; // 最多评论5个帖子
+        int maxComments = 1; // 最多评论5个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 15; // 最多滚动15次
 
@@ -282,24 +292,39 @@ public class OpenBrowser {
      * 进入个人首页
      */
     private void goToProfilePage(WebDriver driver, JavascriptExecutor js) {
-        ProfilePage profilePage = httpRequest.getProfilePage(10, 2);
+        ProfilePage profilePage = httpRequest.getProfilePage(3, 2);
+
         if (profilePage != null) {
+            String[] MsgText = this.data.getSendData().getMsgText().split("\\n\\n\\n");
             for (ProfilePage.User user : profilePage.getUserList()) {
-                String userId = user.getUser_id();
-                String userName = user.getUser_name();
-                String userFullName = user.getUser_fullname();
-                String instagramId = user.getInstagram_id();
-                String instagraminfId = user.getInstagraminf_id();
-                String createdAt = user.getCreated_at();
-                int types = user.getTypes();
+                try {
+                    String userId = user.getUser_id();
+                    String userName = user.getUser_name();
+                    String userFullName = user.getUser_fullname();
+                    String instagramId = user.getInstagram_id();
+                    String instagraminfId = user.getInstagraminf_id();
+                    String createdAt = user.getCreated_at();
+                    int types = user.getTypes();
 
-                driver.get("https://www.instagram.com/" + userName);
-                log.info("进入用户主页: {}", userName);
+                    driver.get("https://www.instagram.com/" + userName);
+                    log.info("进入用户主页: {}", userName);
+                    //打开弹窗点击私信按钮
+                    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+                    // 更多按钮
+                    String moreSelector = "svg[aria-label='选项']";
+                    WebElement more = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(moreSelector)));
+                    more.click();
 
+                    Thread.sleep(1000);
+                    String messageSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div > button:nth-child(6)";
+                    WebElement message = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(messageSelector)));
+                    message.click();
+                } catch (Exception e) {
+                    log.warn("进入用户主页失败: {}", e.getMessage());
+                }
             }
         }
     }
-
 
     /**
      * 关闭评论弹窗
@@ -320,6 +345,4 @@ public class OpenBrowser {
             button.setDisable(false);
         });
     }
-
-
 }

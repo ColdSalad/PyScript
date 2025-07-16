@@ -45,7 +45,7 @@ public class HttpRequest {
      */
     public Data getData(String Account) {
         OkHttpClient client = new OkHttpClient();
-        String url = String.format(API_URL + "/API/GetData.aspx?Account=%s", Account);
+        String url = String.format("https://ig.ry188.vip/API/GetData.aspx?Account=%s", Account);
         Request request = new Request.Builder()
                 .url(url)
                 .build();
