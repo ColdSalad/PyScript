@@ -13,7 +13,7 @@ from qasync import QEventLoop, asyncClose, asyncSlot
 class MyApp(QWidget):
     def __init__(self):
         super().__init__()
-        icon_path = resource_path("Threadsicon.ico")
+        icon_path = resource_path("Thcat.ico")
         self.setWindowIcon(QIcon(icon_path))
         self.monitor_window = None
         self.initUI()
