@@ -10,7 +10,10 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
@@ -43,12 +46,36 @@ public class OpenBrowser {
             try {
                 //默认启动Edge浏览器
                 log.info("尝试启动Edge浏览器...");
-                driver = new EdgeDriver();
+                EdgeOptions edgeOptions = new EdgeOptions();
+                edgeOptions.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                driver = new EdgeDriver(edgeOptions);
             } catch (Exception e) {
                 log.info("Edge启动失败，尝试启动Chrome浏览器...");
-                driver = new ChromeDriver();
+                ChromeOptions chromeOptions = new ChromeOptions();
+                chromeOptions.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                driver = new ChromeDriver(chromeOptions);
             }
             driver.get("https://www.instagram.com/");
+
+            // 添加Cookie
+            driver.manage().addCookie(new Cookie("datr", "SMBcaGd5pEN9TBbgTHpG5Zx6"));
+            driver.manage().addCookie(new Cookie("ig_did", "9708FC04-B966-418F-AED7-5BA6E6E365F7"));
+            driver.manage().addCookie(new Cookie("mid", "aFzASAALAAGXyzxb-4jLQyPiW8HD"));
+            driver.manage().addCookie(new Cookie("ps_l", "1"));
+            driver.manage().addCookie(new Cookie("ps_n", "1"));
+            driver.manage().addCookie(new Cookie("ig_nrcb", "1"));
+            driver.manage().addCookie(new Cookie("csrftoken", "GzbiGK1BfjlBpw5Jm2w8Ej9Ab3fRTkey"));
+            driver.manage().addCookie(new Cookie("dpr", "1"));
+            driver.manage().addCookie(new Cookie("locale", "en_US"));
+            driver.manage().addCookie(new Cookie("ig_lang", "en-gb"));
+            driver.manage().addCookie(new Cookie("sessionid", "76140321107%3AFLdGWmR8kCQXf0%3A23%3AAYcb1skSaonIIN0IGcWEKL4H6LLW8dpoIcRWbmyAAQ"));
+            driver.manage().addCookie(new Cookie("ds_user_id", "76140321107"));
+            driver.manage().addCookie(new Cookie("wd", "855x895"));
+            driver.manage().addCookie(new Cookie("rur", "\"NHA\\05476140321107\\0541784198456:01fe5bbc0e77bbdbcdbce81c90f4b055c2359eeba999e9f9f132248df988ccec07ec5141\""));
+
+            // 刷新页面以应用Cookie
+            driver.navigate().refresh();
+
             // 自动登录逻辑
             try {
                 Thread.sleep(5000);
@@ -92,7 +119,8 @@ public class OpenBrowser {
         Data.ConfigDatas configDatas = data.getSendData().getConfigDatas();
         String Home_IsEnableLike = configDatas.getHome_IsEnableLike();
         int likedCount = 0; // 已点赞的帖子数
-        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
+//        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
+        int maxLikes = 1;
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 10; // 最多滚动次
         String HuDong_IsEnableMsg = configDatas.getHuDong_IsEnableMsg(); //是否私信
@@ -292,7 +320,7 @@ public class OpenBrowser {
      * 进入个人首页
      */
     private void goToProfilePage(WebDriver driver, JavascriptExecutor js) {
-        ProfilePage profilePage = httpRequest.getProfilePage(3, 2);
+        ProfilePage profilePage = httpRequest.getProfilePage(2, 2);
 
         if (profilePage != null) {
             String[] MsgText = this.data.getSendData().getMsgText().split("\\n\\n\\n");
