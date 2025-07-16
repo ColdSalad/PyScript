@@ -7,12 +7,14 @@ import platform
 import os
 import winreg  # 仅适用于Windows
 import shutil  # 适用于Linux和macOS
+
+import requests
 from PyQt5.QtWidgets import QApplication
 from Threads_loginwin import win_main
 from playwright.async_api import async_playwright
 
 class Crawler:
-    def __init__(self, cookies,data,userslists,image_path):
+    def __init__(self, cookies,data,userslists):
         self.username = None
         self.password = None
         self.browser = None
@@ -41,7 +43,8 @@ class Crawler:
         self.UsersLists = userslists
         self.new_user_Tracking_num = 0
         self.new_fans_num = 0
-        self.pic_path = image_path
+        self.init = data
+        self.pic_path = None
         self.status_window = None  # 状态窗口引用
 
     def update_status(self, text):
@@ -64,7 +67,6 @@ class Crawler:
 
         # 应用cookies到上下文
         if self.cookies:
-
             await context.add_cookies(self.cookies)
             print("已应用cookies到浏览器上下文")
         print("已确认登录状态，开始执行任务...")
@@ -456,14 +458,17 @@ class Crawler:
                 await comment_box.fill(self.leave_text[random_test])
                 self.update_status(f"留言內容: {self.leave_text[random_test]}")
                 print(f"已输入留言内容: {self.leave_text[random_test]}")
-
-                if self.message_pic and self.pic_path is not None :
+                if self.message_pic :
+                    self.pic_path = GetHtmlpic(self.init)
+                    self.update_status("下載圖片...")
                     await asyncio.sleep(2)
-                    # 使用文件选择器
-                    file_input = await self.page.query_selector('input[type="file"]')
-                    if file_input:
-                        await file_input.set_input_files(self.pic_path)
-                        self.update_status("通过文件选择器上传图片")
+                    if  self.pic_path is not None :
+                        await asyncio.sleep(2)
+                        # 使用文件选择器
+                        file_input = await self.page.query_selector('input[type="file"]')
+                        if file_input:
+                            await file_input.set_input_files(self.pic_path)
+                            self.update_status("通过文件选择器上传图片")
 
                     print(f"已输入图片地址: {self.pic_path}")
                 # 等待发送按钮出现
@@ -627,7 +632,22 @@ class Crawler:
 
         # 再使用平台特定的方法
         self.minimize_browser_window()
-
+def GetHtmlpic(data):
+    # 创建img文件夹（如果不存在）
+    if not os.path.exists('img'):
+        os.makedirs('img')
+    if len(data["SendData"]["ConfigDatas"]["SendPicList"]) > 0:
+        random_test = random.randint(0, len(data["SendData"]["ConfigDatas"]["SendPicList"]) - 1)
+        print(data["SendData"]["ConfigDatas"]["SendPicList"][random_test])
+        # 下载图片
+        htmlpic = requests.get(data["SendData"]["ConfigDatas"]["SendPicList"][random_test], timeout=30)
+        # 图片保存路径
+        img_path = os.path.join('img', 'image.png')
+        # 保存图片
+        with open(img_path, 'wb') as file:
+            file.write(htmlpic.content)
+        # 返回图片的绝对路径
+        return os.path.abspath(img_path)
 def parse_bool(type_data):
     type_data = str(type_data).lower().strip()
     if type_data in ('true', 'True', 'TRUE'):
