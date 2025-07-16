@@ -8,9 +8,6 @@ import os
 import winreg  # 仅适用于Windows
 import shutil  # 适用于Linux和macOS
 from PyQt5.QtWidgets import QApplication
-from PIL import Image
-from io import BytesIO
-import win32clipboard
 from Threads_loginwin import win_main
 from playwright.async_api import async_playwright
 
@@ -94,6 +91,7 @@ class Crawler:
 
     async def automate_clicks(self):
         await self.page.goto(url="https://www.threads.com/", wait_until='load')
+        # await self.force_minimize_browser()
         await asyncio.sleep(8)
         """执行自动化点击操作"""
         print("开始执行自动化点击...")
@@ -461,8 +459,7 @@ class Crawler:
 
                 if self.message_pic and self.pic_path is not None :
                     await asyncio.sleep(2)
-                    # copy_image_to_clipboard(self.pic_path)
-                    # 备选方案：使用文件选择器
+                    # 使用文件选择器
                     file_input = await self.page.query_selector('input[type="file"]')
                     if file_input:
                         await file_input.set_input_files(self.pic_path)
@@ -494,6 +491,7 @@ class Crawler:
             print(self.Key[num])
             self.update_status(f"關鍵字: "+self.Key[num])
             await self.page.goto(url="https://www.threads.com/search?q=" + str(self.Key[num]), wait_until='load')
+            # await self.force_minimize_browser()
             await asyncio.sleep(8)
 
             out_count = 0
@@ -570,6 +568,7 @@ class Crawler:
                     continue
     async def Personal_is_message(self):
         await self.page.goto(url="https://www.threads.com/", wait_until='load')
+        # await self.force_minimize_browser()
         await asyncio.sleep(8)
         try:
             # 等待點擊發文框出现
@@ -628,18 +627,6 @@ class Crawler:
 
         # 再使用平台特定的方法
         self.minimize_browser_window()
-
-def copy_image_to_clipboard(img_path: str):
-    '''输入文件名，执行后，将图片复制到剪切板'''
-    image = Image.open(img_path)
-    output = BytesIO()
-    image.save(output, 'BMP')
-    data = output.getvalue()[14:]
-    output.close()
-    win32clipboard.OpenClipboard()
-    win32clipboard.EmptyClipboard()
-    win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
-    win32clipboard.CloseClipboard()
 
 def parse_bool(type_data):
     type_data = str(type_data).lower().strip()
