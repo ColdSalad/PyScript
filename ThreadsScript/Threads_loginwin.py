@@ -10,7 +10,7 @@ from qasync import QEventLoop
 class MyApplog(QDialog):
     def __init__(self):
         super().__init__()
-        icon_path = resource_path("Threadsicon.ico")
+        icon_path = resource_path("Thcat.ico")
         self.setWindowIcon(QIcon(icon_path))
         self.setWindowFlags(Qt.Dialog | Qt.FramelessWindowHint)  # 保持无边框
         self.credentials = None

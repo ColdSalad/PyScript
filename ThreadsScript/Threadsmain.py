@@ -7,15 +7,14 @@ import platform
 import os
 import winreg  # 仅适用于Windows
 import shutil  # 适用于Linux和macOS
+
+import requests
 from PyQt5.QtWidgets import QApplication
-from PIL import Image
-from io import BytesIO
-import win32clipboard
 from Threads_loginwin import win_main
 from playwright.async_api import async_playwright
 
 class Crawler:
-    def __init__(self, cookies,data,userslists,image_path):
+    def __init__(self, cookies,data,userslists):
         self.username = None
         self.password = None
         self.browser = None
@@ -44,7 +43,8 @@ class Crawler:
         self.UsersLists = userslists
         self.new_user_Tracking_num = 0
         self.new_fans_num = 0
-        self.pic_path = image_path
+        self.init = data
+        self.pic_path = None
         self.status_window = None  # 状态窗口引用
 
     def update_status(self, text):
@@ -67,7 +67,6 @@ class Crawler:
 
         # 应用cookies到上下文
         if self.cookies:
-
             await context.add_cookies(self.cookies)
             print("已应用cookies到浏览器上下文")
         print("已确认登录状态，开始执行任务...")
@@ -94,6 +93,7 @@ class Crawler:
 
     async def automate_clicks(self):
         await self.page.goto(url="https://www.threads.com/", wait_until='load')
+        # await self.force_minimize_browser()
         await asyncio.sleep(8)
         """执行自动化点击操作"""
         print("开始执行自动化点击...")
@@ -201,21 +201,21 @@ class Crawler:
                 executable_path=self.browser_path,
                 args=['--start-minimized']  # 确保浏览器启动时最小化
             )
-
-            await self.page.goto(url="https://www.threads.net/login", wait_until='load')
+            page = await self.browser.new_page()
+            await page.goto(url="https://www.threads.net/login", wait_until='load')
             await asyncio.sleep(1)
 
             # 输入凭证
-            await self.page.locator("form input").first.fill(self.username)
-            await self.page.locator("form input").nth(1).fill(self.password)
-            await self.page.click("form div[role='button']")
+            await page.locator("form input").first.fill(self.username)
+            await page.locator("form input").nth(1).fill(self.password)
+            await page.click("form div[role='button']")
 
             # 检查登录是否成功
             try:
-                await self.page.wait_for_url("https://www.threads.net/?login_success=true", timeout=25000)
+                await page.wait_for_url("https://www.threads.net/?login_success=true", timeout=25000)
                 self.is_logged_in = True
             except:
-                current_url = await self.page.evaluate("() => window.location.href")
+                current_url = await page.evaluate("() => window.location.href")
                 if "login" in current_url or "challenge" in current_url:
                     print(f"登录失败，当前URL: {current_url}")
                     self.is_logged_in = False
@@ -223,7 +223,7 @@ class Crawler:
                     raise Exception("登录失败，请检查用户名和密码")
 
             # 登录成功处理
-            self.cookies = await self.page.context.cookies()
+            self.cookies = await page.context.cookies()
             with open("threads.json", "w") as f:
                 json.dump(self.cookies, f, indent=4)
 
@@ -458,15 +458,17 @@ class Crawler:
                 await comment_box.fill(self.leave_text[random_test])
                 self.update_status(f"留言內容: {self.leave_text[random_test]}")
                 print(f"已输入留言内容: {self.leave_text[random_test]}")
-
-                if self.message_pic and self.pic_path is not None :
+                if self.message_pic :
+                    self.pic_path = GetHtmlpic(self.init)
+                    self.update_status("下載圖片...")
                     await asyncio.sleep(2)
-                    # copy_image_to_clipboard(self.pic_path)
-                    # 备选方案：使用文件选择器
-                    file_input = await self.page.query_selector('input[type="file"]')
-                    if file_input:
-                        await file_input.set_input_files(self.pic_path)
-                        self.update_status("通过文件选择器上传图片")
+                    if  self.pic_path is not None :
+                        await asyncio.sleep(2)
+                        # 使用文件选择器
+                        file_input = await self.page.query_selector('input[type="file"]')
+                        if file_input:
+                            await file_input.set_input_files(self.pic_path)
+                            self.update_status("通过文件选择器上传图片")
 
                     print(f"已输入图片地址: {self.pic_path}")
                 # 等待发送按钮出现
@@ -494,6 +496,7 @@ class Crawler:
             print(self.Key[num])
             self.update_status(f"關鍵字: "+self.Key[num])
             await self.page.goto(url="https://www.threads.com/search?q=" + str(self.Key[num]), wait_until='load')
+            # await self.force_minimize_browser()
             await asyncio.sleep(8)
 
             out_count = 0
@@ -570,6 +573,7 @@ class Crawler:
                     continue
     async def Personal_is_message(self):
         await self.page.goto(url="https://www.threads.com/", wait_until='load')
+        # await self.force_minimize_browser()
         await asyncio.sleep(8)
         try:
             # 等待點擊發文框出现
@@ -628,19 +632,22 @@ class Crawler:
 
         # 再使用平台特定的方法
         self.minimize_browser_window()
-
-def copy_image_to_clipboard(img_path: str):
-    '''输入文件名，执行后，将图片复制到剪切板'''
-    image = Image.open(img_path)
-    output = BytesIO()
-    image.save(output, 'BMP')
-    data = output.getvalue()[14:]
-    output.close()
-    win32clipboard.OpenClipboard()
-    win32clipboard.EmptyClipboard()
-    win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
-    win32clipboard.CloseClipboard()
-
+def GetHtmlpic(data):
+    # 创建img文件夹（如果不存在）
+    if not os.path.exists('img'):
+        os.makedirs('img')
+    if len(data["SendData"]["ConfigDatas"]["SendPicList"]) > 0:
+        random_test = random.randint(0, len(data["SendData"]["ConfigDatas"]["SendPicList"]) - 1)
+        print(data["SendData"]["ConfigDatas"]["SendPicList"][random_test])
+        # 下载图片
+        htmlpic = requests.get(data["SendData"]["ConfigDatas"]["SendPicList"][random_test], timeout=30)
+        # 图片保存路径
+        img_path = os.path.join('img', 'image.png')
+        # 保存图片
+        with open(img_path, 'wb') as file:
+            file.write(htmlpic.content)
+        # 返回图片的绝对路径
+        return os.path.abspath(img_path)
 def parse_bool(type_data):
     type_data = str(type_data).lower().strip()
     if type_data in ('true', 'True', 'TRUE'):

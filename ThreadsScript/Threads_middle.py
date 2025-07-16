@@ -32,30 +32,12 @@ def GetHtmluser(data):
     return UserLists
 
 
-def GetHtmlpic(data):
-    # 创建img文件夹（如果不存在）
-    if not os.path.exists('img'):
-        os.makedirs('img')
-    if len(data["SendData"]["ConfigDatas"]["SendPicList"]) > 0:
-        random_test = random.randint(0, len(data["SendData"]["ConfigDatas"]["SendPicList"]) - 1)
-        print(data["SendData"]["ConfigDatas"]["SendPicList"][random_test])
-        # 下载图片
-        htmlpic = requests.get(data["SendData"]["ConfigDatas"]["SendPicList"][random_test], timeout=30)
-        # 图片保存路径
-        img_path = os.path.join('img', 'image.png')
-        # 保存图片
-        with open(img_path, 'wb') as file:
-            file.write(htmlpic.content)
-        # 返回图片的绝对路径
-        return os.path.abspath(img_path)
-
-
 async def main(content1):
+
     cookies = getCookie()  # 从文件读取cookies
     data = requests.get("https://th.ry188.vip/API/GetData.aspx?Account=" + content1, timeout=30).json()
     userslists = GetHtmluser(data)
-    image_path = GetHtmlpic(data)
-    crawler = Crawler(cookies, data, userslists, image_path)
+    crawler = Crawler(cookies, data, userslists)
 
     # 确保登录成功
     if cookies is None or not await crawler.check_cookies_valid():

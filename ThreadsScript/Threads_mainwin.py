@@ -13,7 +13,7 @@ from qasync import QEventLoop, asyncClose, asyncSlot
 class MyApp(QWidget):
     def __init__(self):
         super().__init__()
-        icon_path = resource_path("Threadsicon.ico")
+        icon_path = resource_path("Thcat.ico")
         self.setWindowIcon(QIcon(icon_path))
         self.monitor_window = None
         self.initUI()
@@ -58,16 +58,23 @@ class MyApp(QWidget):
                """)
         # 将标题栏添加到主布局
         main_layout.addLayout(title_bar)
-
+        login_name = ''
+        login_pass = ''
+        if os.path.exists('Threadsuser.txt'):
+            with open('Threadsuser.txt', mode='r', newline='', encoding='utf-8') as file:
+                login = file.read().split("|+|")
+                login_name = login[0].strip('')
+                login_pass = login[1].strip('')
+        print(login_name, login_pass)
         # 创建三个输入框
         self.input0 = QLineEdit(self)
         self.input0.setText("000")
         self.input0.setPlaceholderText("請輸入設備號...")
         self.input1 = QLineEdit(self)
-        self.input1.setText("272275")
+        self.input1.setText(login_name)
         self.input1.setPlaceholderText("請輸入Ai後臺賬號...")
         self.input2 = QLineEdit(self)
-        self.input2.setText("qwa123456")
+        self.input2.setText(login_pass)
         self.input2.setPlaceholderText("請輸入Ai後臺密碼...")
         main_layout.addWidget(QLabel("設備號:"))
         main_layout.addWidget(self.input0)
@@ -179,6 +186,8 @@ class MyApp(QWidget):
         print(f"设备号: {content0}")
         print(f"账号: {content1}")
         print(f"密码: {content2}")
+        with open('Threadsuser.txt', mode='w', newline='', encoding='utf-8') as file:
+            file.write(str(content1)+"|+|"+str(content2))
         # 启动异步任务后，不关闭窗口，而是隐藏窗口
         self.hide()  # 隐藏窗口而非关闭
         try:
