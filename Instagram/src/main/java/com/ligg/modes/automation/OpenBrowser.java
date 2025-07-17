@@ -3,7 +3,7 @@ package com.ligg.modes.automation;
 import com.ligg.modes.http_request.HttpRequest;
 import com.ligg.modes.pojo.Data;
 import com.ligg.modes.pojo.ProfilePage;
-import com.ligg.modes.util.GetCookieUtil;
+import com.ligg.modes.util.CookieUtil;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
 import org.openqa.selenium.By;
@@ -21,10 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -100,31 +97,54 @@ public class OpenBrowser {
                 homeButton.click();
 
                 //获取登录后的Cookie
-                Cookie datrCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "datr", ".instagram.com");
-                Cookie ig_didCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "ig_did", ".instagram.com");
-                Cookie midCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "mid", ".instagram.com");
-                Cookie ps_lCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "ps_l", ".instagram.com");
-                Cookie ps_nCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "ps_n", ".instagram.com");
-                Cookie csrftokenCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "csrftoken", ".instagram.com");
-                Cookie dprCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "dpr", ".instagram.com");
-                Cookie localeCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "locale", ".instagram.com");
-                Cookie ig_langCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "ig_lang", ".instagram.com");
-                Cookie sessionidCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "sessionid", ".instagram.com");
-                Cookie ds_user_idCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "ds_user_id", ".instagram.com");
-                Cookie rurCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "rur", ".instagram.com");
+                String datrCookie = CookieUtil.getCookieByNameAndDomain(driver, "datr", "www.instagram.com");
+                String ig_didCookie = CookieUtil.getCookieByNameAndDomain(driver, "ig_did", "www.instagram.com");
+                String midCookie = CookieUtil.getCookieByNameAndDomain(driver, "mid", ".instagram.com");
+                String ps_lCookie = CookieUtil.getCookieByNameAndDomain(driver, "ps_l", "www.instagram.com");
+                String ps_nCookie = CookieUtil.getCookieByNameAndDomain(driver, "ps_n", "www.instagram.com");
+                String ig_nrcbCookie = CookieUtil.getCookieByNameAndDomain(driver, "ig_nrcb", "www.instagram.com");
+                String csrftokenCookie = CookieUtil.getCookieByNameAndDomain(driver, "csrftoken", ".instagram.com");
+                String dprCookie = CookieUtil.getCookieByNameAndDomain(driver, "dpr", "www.instagram.com");
+                String localeCookie = CookieUtil.getCookieByNameAndDomain(driver, "locale", "www.instagram.com");
+                String ig_langCookie = CookieUtil.getCookieByNameAndDomain(driver, "ig_lang", "www.instagram.com");
+                String sessionidCookie = CookieUtil.getCookieByNameAndDomain(driver, "sessionid", "www.instagram.com");
+                String ds_user_idCookie = CookieUtil.getCookieByNameAndDomain(driver, "ds_user_id", ".instagram.com");
+                String wdCookie = CookieUtil.getCookieByNameAndDomain(driver, "wd", "www.instagram.com");
+                String rurCookie = CookieUtil.getCookieByNameAndDomain(driver, "rur", "www.instagram.com");
 
-                System.out.println("datr:" + datrCookie);
-                System.out.println(ig_didCookie);
-                System.out.println(midCookie);
-                System.out.println(ps_lCookie);
-                System.out.println(ps_nCookie);
-                System.out.println(csrftokenCookie);
-                System.out.println(dprCookie);
-                System.out.println(localeCookie);
-                System.out.println(ig_langCookie);
-                System.out.println(sessionidCookie);
-                System.out.println(ds_user_idCookie);
-                System.out.println(rurCookie);
+                HashMap<String, String> cookieMap = new HashMap<>();
+                cookieMap.put("datr", datrCookie);
+                cookieMap.put("ig_did", ig_didCookie);
+                cookieMap.put("mid", midCookie);
+                cookieMap.put("ps_l", ps_lCookie);
+                cookieMap.put("ps_n", ps_nCookie);
+                cookieMap.put("ig_nrcb", ig_nrcbCookie);
+                cookieMap.put("csrftoken", csrftokenCookie);
+                cookieMap.put("dpr", dprCookie);
+                cookieMap.put("locale", localeCookie);
+                cookieMap.put("ig_lang", ig_langCookie);
+                cookieMap.put("sessionid", sessionidCookie);
+                cookieMap.put("ds_user_id", ds_user_idCookie);
+                cookieMap.put("wd", wdCookie);
+                cookieMap.put("rur", rurCookie);
+
+                //保存Cookie
+                CookieUtil.saveCookieToJson(cookieMap);
+
+//                System.out.println("datr:" + datrCookie);
+//                System.out.println("ig_did:"+ig_didCookie);
+//                System.out.println("mid:"+midCookie);
+//                System.out.println("ps_l:"+ps_lCookie);
+//                System.out.println("ps_n:"+ps_nCookie);
+//                System.out.println("ig_nrcb:"+ig_nrcbCookie);
+//                System.out.println("csrftoken:"+csrftokenCookie);
+//                System.out.println("dpr:"+dprCookie);
+//                System.out.println("locale:"+localeCookie);
+//                System.out.println("ig_lang:"+ig_langCookie);
+//                System.out.println("sessionid:"+sessionidCookie);
+//                System.out.println("ds_user_id:"+ds_user_idCookie);
+//                System.out.println("wd:"+wdCookie);
+//                System.out.println("rur:"+rurCookie);
 
 
                 //点赞
