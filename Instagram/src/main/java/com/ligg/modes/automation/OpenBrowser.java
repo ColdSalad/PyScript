@@ -3,6 +3,7 @@ package com.ligg.modes.automation;
 import com.ligg.modes.http_request.HttpRequest;
 import com.ligg.modes.pojo.Data;
 import com.ligg.modes.pojo.ProfilePage;
+import com.ligg.modes.util.GetCookieUtil;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
 import org.openqa.selenium.By;
@@ -22,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
+import java.util.Set;
 
 
 /**
@@ -55,7 +58,7 @@ public class OpenBrowser {
                 chromeOptions.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
                 driver = new ChromeDriver(chromeOptions);
             }
-            driver.get("https://www.instagram.com/");
+            driver.get("https://www.instagram.com/?next=%2F");
 
             // 添加Cookie
             driver.manage().addCookie(new Cookie("datr", "SMBcaGd5pEN9TBbgTHpG5Zx6"));
@@ -79,26 +82,53 @@ public class OpenBrowser {
             // 自动登录逻辑
             try {
                 Thread.sleep(5000);
-                //选中账号、密码输入框
-                WebElement usernameInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[1]/div/label/input"));
-                WebElement passwordInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[2]/div/label/input"));
-                usernameInput.sendKeys(username);
-                passwordInput.sendKeys(password);
 
-                //点击登录按钮
-                WebElement webLoginButton = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[3]/button"));
-                webLoginButton.click();
-
-
-                Thread.sleep(5000);
                 if (!driver.getCurrentUrl().equals("https://www.instagram.com/?next=%2F")) {
-                    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-                    var homeButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(1) > div > span > div > a > div")));
-                    homeButton.click();
+                    //选中账号、密码输入框
+                    WebElement usernameInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[1]/div/label/input"));
+                    WebElement passwordInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[2]/div/label/input"));
+                    usernameInput.sendKeys(username);
+                    passwordInput.sendKeys(password);
 
-                    //点赞
-                    like(driver, loginButton);
+                    //点击登录按钮
+                    WebElement webLoginButton = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[3]/button"));
+                    webLoginButton.click();
                 }
+                Thread.sleep(5000);
+                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+                var homeButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(1) > div > span > div > a > div")));
+                homeButton.click();
+
+                //获取登录后的Cookie
+                Cookie datrCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "datr", ".instagram.com");
+                Cookie ig_didCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "ig_did", ".instagram.com");
+                Cookie midCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "mid", ".instagram.com");
+                Cookie ps_lCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "ps_l", ".instagram.com");
+                Cookie ps_nCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "ps_n", ".instagram.com");
+                Cookie csrftokenCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "csrftoken", ".instagram.com");
+                Cookie dprCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "dpr", ".instagram.com");
+                Cookie localeCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "locale", ".instagram.com");
+                Cookie ig_langCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "ig_lang", ".instagram.com");
+                Cookie sessionidCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "sessionid", ".instagram.com");
+                Cookie ds_user_idCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "ds_user_id", ".instagram.com");
+                Cookie rurCookie = GetCookieUtil.getCookieByNameAndDomain(driver, "rur", ".instagram.com");
+
+                System.out.println("datr:" + datrCookie);
+                System.out.println(ig_didCookie);
+                System.out.println(midCookie);
+                System.out.println(ps_lCookie);
+                System.out.println(ps_nCookie);
+                System.out.println(csrftokenCookie);
+                System.out.println(dprCookie);
+                System.out.println(localeCookie);
+                System.out.println(ig_langCookie);
+                System.out.println(sessionidCookie);
+                System.out.println(ds_user_idCookie);
+                System.out.println(rurCookie);
+
+
+                //点赞
+                like(driver, loginButton);
             } catch (InterruptedException e) {
                 log.error("网页加载超时");
             }
@@ -130,7 +160,7 @@ public class OpenBrowser {
             try {
                 while (likedCount < maxLikes && scrollAttempts < maxScrollAttempts) {
                     // 查找所有未点赞的按钮（通过aria-label="赞"识别）
-                    List<WebElement> likeButtons = driver.findElements(By.cssSelector("svg[aria-label='赞']"));
+                    List<WebElement> likeButtons = driver.findElements(By.cssSelector("svg[aria-label='赞'],svg[aria-label='Like']"));
 
                     if (!likeButtons.isEmpty()) {
                         for (WebElement svgElement : likeButtons) {
@@ -214,7 +244,7 @@ public class OpenBrowser {
 
         try {
             while (commentedCount < maxComments && scrollAttempts < maxScrollAttempts) {
-                List<WebElement> commentButtons = driver.findElements(By.cssSelector("svg[aria-label='评论']"));
+                List<WebElement> commentButtons = driver.findElements(By.cssSelector("svg[aria-label='评论'],svg[aria-label='Comment']"));
 
                 for (WebElement svgElement : commentButtons) {
                     if (commentOnPost(svgElement, driver, js, commentedCount)) {
@@ -268,7 +298,7 @@ public class OpenBrowser {
                 // 等待弹窗出现
                 WebElement commentModal = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div[role='dialog']")));
                 // 在弹窗中查找评论图标
-                WebElement commentIconInPopup = commentModal.findElement(By.cssSelector("svg[aria-label='评论']"));
+                WebElement commentIconInPopup = commentModal.findElement(By.cssSelector("svg[aria-label='评论'],svg[aria-label='Comment']"));
                 WebElement clickableCommentButton = findClickableParent(commentIconInPopup, js);
                 if (clickableCommentButton != null) {
                     js.executeScript("arguments[0].click();", clickableCommentButton);
@@ -339,7 +369,7 @@ public class OpenBrowser {
                     //打开弹窗点击私信按钮
                     WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
                     // 更多按钮
-                    String moreSelector = "svg[aria-label='选项']";
+                    String moreSelector = "svg[aria-label='选项'],svg[aria-label='Options']";
                     WebElement more = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(moreSelector)));
                     more.click();
 
@@ -347,6 +377,21 @@ public class OpenBrowser {
                     String messageSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div > button:nth-child(6)";
                     WebElement message = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(messageSelector)));
                     message.click();
+
+                    //检查是否有消息通知弹窗
+                    WebElement messageNotify = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div.x7r02ix.x15fl9t6.x1yw9sn2.x1evh3fb.x4giqqa.xb88tzc.xw2csxc.x1odjw0f.x5fp0pe > div")));
+                    if (messageNotify != null) {
+                        WebElement closeButton = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div.x7r02ix.x15fl9t6.x1yw9sn2.x1evh3fb.x4giqqa.xb88tzc.xw2csxc.x1odjw0f.x5fp0pe > div > div > div._a9-z > button._a9--._ap36._a9_1")));
+                        closeButton.click();
+                    }
+                    WebElement messageP = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div > div > div > div.x9f619.x1n2onr6.x1ja2u2z > div > div > div.x78zum5.xdt5ytf.x1t2pt76.x1n2onr6.x1ja2u2z.x10cihs4 > div.html-div.xdj266r.x14z9mp.xat24cr.x1lziwak.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x9f619.x1f5funs.xvbhtw8.x78zum5.x15mokao.x1ga7v0g.x16uus16.xbiv7yw.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.x1q0g3np.xqjyukv.x1qjc9v5.x1oa3qoh.x1qughib > div.xvc5jky.xh8yej3.x10o80wk.x14k21rp.x1v4esvl.x8vgawa > section > main > section > div > div > div > div.xjp7ctv > div > div.x9f619.x1n2onr6.x1ja2u2z.x78zum5.xdt5ytf.x193iq5w.xeuugli.x1r8uery.x1iyjqo2.xs83m0k > div > div.html-div.xdj266r.x14z9mp.xat24cr.x1lziwak.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x9f619.x78zum5.x15mokao.x1ga7v0g.x16uus16.xbiv7yw.x1iyjqo2.x2lwn1j.xeuugli.x1q0g3np.xqjyukv.x1qjc9v5.x1oa3qoh.x1nhvcw1.xcrg951.x6prxxf.x6ikm8r.x10wlt62.x1n2onr6.xh8yej3 > div > div.x78zum5.xdt5ytf.x1iyjqo2.x193iq5w.x2lwn1j.x1n2onr6 > div:nth-child(2) > div > div > div > div > div.html-div.xat24cr.xexx8yu.xyri2b.x1c1uobl.x9f619.xjbqb8w.x78zum5.x15mokao.x1ga7v0g.x16uus16.xbiv7yw.x1xmf6yo.x13fj5qh.x2fvf9.x1uhb9sk.x1plvlek.xryxfnj.x1iyjqo2.x2lwn1j.xeuugli.xdt5ytf.xqjyukv.x1qjc9v5.x1oa3qoh.x1nhvcw1.xs9asl8 > div > div.xzsf02u.x1a2a7pz.x1n2onr6.x14wi4xw.x1iyjqo2.x1gh3ibb.xisnujt.xeuugli.x1odjw0f.notranslate > p")));
+                    //从MsgText数组中随机获取一条数据
+                    String msgText = MsgText[new Random().nextInt(MsgText.length)];
+                    messageP.sendKeys(msgText);
+
+                    //点击发送按钮
+                    WebElement sendButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//div[@role='button'][@tabindex='0' and normalize-space()='Send']")));
+                    sendButton.click();
                 } catch (Exception e) {
                     log.warn("进入用户主页失败: {}", e.getMessage());
                 }
