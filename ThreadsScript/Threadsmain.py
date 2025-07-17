@@ -91,6 +91,7 @@ class Crawler:
             await self.Personal_post(htmljsinput, htmljsbut)
 
         await self.Usersmissing()  # 用户个人主页留言
+        self.update_status("-----全部任務完成-----")
 
     async def automate_clicks(self):
         await self.page.goto(url="https://www.threads.com/", wait_until='load')
@@ -644,6 +645,7 @@ class Crawler:
                     if out_count == 3:
                         break
                     continue
+
     async def Personal_is_message(self):
         await self.page.goto(url="https://www.threads.com/", wait_until='load')
         await self.force_minimize_browser()
@@ -665,6 +667,7 @@ class Crawler:
             await asyncio.sleep(8)
         except Exception as e:
             print(f"使用完整路径选择器也失败: {str(e)}")
+
     # 添加新的辅助方法
     def minimize_browser_window(self):
         """最小化浏览器窗口（平台特定实现）"""
@@ -705,6 +708,7 @@ class Crawler:
 
         # 再使用平台特定的方法
         self.minimize_browser_window()
+
 def GetHtmlpic(data):
     # 创建img文件夹（如果不存在）
     if not os.path.exists('img'):
@@ -721,12 +725,14 @@ def GetHtmlpic(data):
             file.write(htmlpic.content)
         # 返回图片的绝对路径
         return os.path.abspath(img_path)
+
 def parse_bool(type_data):
     type_data = str(type_data).lower().strip()
     if type_data in ('true', 'True', 'TRUE'):
         return True
     elif type_data in ('false', 'False', 'FALSE'):
         return False
+
 def get_chrome_path():
     system = platform.system()
 
