@@ -44,10 +44,13 @@ async def main(content1):
         try:
             # 尝试GUI登录
             await crawler.login_with_gui()
-            if not crawler.is_logged_in:
-                print("登录失败，无法继续执行任务")
-                await crawler.login_with_gui()
-                # return  # 直接返回，不再执行后续任务
+            while 1:
+                if not crawler.is_logged_in:
+                    print("登录失败，无法继续执行任务")
+                    await crawler.login_with_gui()
+                    # return  # 直接返回，不再执行后续任务
+                else:
+                    break
         except Exception as e:
             print(f"登录失败: {str(e)}")
             return  # 登录失败时直接返回
@@ -59,7 +62,7 @@ async def main(content1):
         app = QApplication.instance()
         if not app:
             app = QApplication(sys.argv)
-
+        app.setApplicationName("Threads自動化脚本")
         status_window = StatusWindow()
         status_window.show()
         # 关键修改：将状态窗口传递给crawler对象

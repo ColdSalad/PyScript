@@ -86,14 +86,15 @@ class Crawler:
             print("个人发文")#个人发文
             await self.Personal_is_message()
             htmljsinput = '//div[@contenteditable="true" and @aria-placeholder="有什麼新鮮事？"or @contenteditable="true" and @aria-placeholder="有什麼新鮮事嗎？" or @contenteditable="true" and @aria-placeholder="有什么新鲜事？" or @contenteditable="true" and @aria-placeholder="有什么新鲜事吗？"]/p'
-            htmljsbut = '//div[text()="發佈" or text()="发布"]'
+            # htmljsbut = '//div[text()="發佈" or text()="发布"]'
+            htmljsbut = '//div[@role="dialog"]//div[text()="發佈" or text()="发布"]'
             await self.Personal_post(htmljsinput, htmljsbut)
 
         await self.Usersmissing()  # 用户个人主页留言
 
     async def automate_clicks(self):
         await self.page.goto(url="https://www.threads.com/", wait_until='load')
-        # await self.force_minimize_browser()
+        await self.force_minimize_browser()
         await asyncio.sleep(8)
         """执行自动化点击操作"""
         print("开始执行自动化点击...")
@@ -128,11 +129,23 @@ class Crawler:
 
                             # 等待留言框出现
                             await asyncio.sleep(2)
-                            # 定位留言框并输入内容
-                            comment_box_selector = "#barcelona-page-layout > div > div > div.xb57i2i.x1q594ok.x5lxg6s.x1ja2u2z.x1pq812k.x1rohswg.xfk6m8.x1yqm8si.xjx87ck.x1l7klhg.xs83m0k.x2lwn1j.xx8ngbg.xwo3gff.x1oyok0e.x1odjw0f.x1n2onr6.xq1qtft.xz401s1.x195bbgf.xgb0k9h.x1l19134.xgjo3nb.x1ga7v0g.x15mokao.x18b5jzi.x1q0q8m5.x1t7ytsu.x1ejq31n.xt8cgyo.x128c8uf.x1co6499.xc5fred.x1ma7e2m.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.xy5w88m.xh8yej3.xbwb3hm.xgh35ic.x19xvnzb.x87ppg5.xev1tu8.xpr2fh2.xgzc8be.x1y1aw1k > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div.x1c1b4dv.x13dflua.x11xpdln > div > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div:nth-child({}) > div > div > div > div > div.x49hn82.xcrlgei.xz9dl7a.xsag5q8 > div > div > div.x78zum5.xdt5ytf.xfp3qos.xh8yej3 > div.x78zum5.xh8yej3 > div.x78zum5.x1cvoeml.xdt5ytf.xh8yej3 > div.x1ed109x.x7r5mf7.xh8yej3 > div > div.xzsf02u.xw2csxc.x1odjw0f.x1n2onr6.x1hnll1o.xpqswwc.notranslate".format(
-                                i)
-                            comment_box = await self.page.wait_for_selector(comment_box_selector, timeout=5000)
-
+                            comment_box = None
+                            try:
+                                # 原始选择器
+                                comment_box_selector = "#barcelona-page-layout > div > div > div.xb57i2i.x1q594ok.x5lxg6s.x1ja2u2z.x1pq812k.x1rohswg.xfk6m8.x1yqm8si.xjx87ck.x1l7klhg.xs83m0k.x2lwn1j.xx8ngbg.xwo3gff.x1oyok0e.x1odjw0f.x1n2onr6.xq1qtft.xz401s1.x195bbgf.xgb0k9h.x1l19134.xgjo3nb.x1ga7v0g.x15mokao.x18b5jzi.x1q0q8m5.x1t7ytsu.x1ejq31n.xt8cgyo.x128c8uf.x1co6499.xc5fred.x1ma7e2m.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.xy5w88m.xh8yej3.xbwb3hm.xgh35ic.x19xvnzb.x87ppg5.xev1tu8.xpr2fh2.xgzc8be.x1y1aw1k > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div.x1c1b4dv.x13dflua.x11xpdln > div > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div:nth-child({}) > div > div > div > div > div.x49hn82.xcrlgei.xz9dl7a.xsag5q8 > div > div > div.x78zum5.xdt5ytf.xfp3qos.xh8yej3 > div.x78zum5.xh8yej3 > div.x78zum5.x1cvoeml.xdt5ytf.xh8yej3 > div.x1ed109x.x7r5mf7.xh8yej3 > div > div.xzsf02u.xw2csxc.x1odjw0f.x1n2onr6.x1hnll1o.xpqswwc.notranslate".format(
+                                    i)
+                                comment_box = await self.page.wait_for_selector(comment_box_selector, timeout=3000)
+                            except Exception as e:
+                                print(f"原始留言框选择器失败: {str(e)}")
+                            # 如果原始选择器失败，尝试备用选择器
+                            if not comment_box:
+                                try:
+                                    backup_selector = '//div[@role="dialog"]//div[@aria-label="文本栏为空白。请输入内容，撰写新帖子。" or @aria-label="文字欄位空白。請輸入內容以撰寫新貼文。"]'
+                                    comment_box = await self.page.wait_for_selector(backup_selector, timeout=3000)
+                                    if comment_box:
+                                        print(f"使用备用选择器找到留言框")
+                                except Exception as e:
+                                    print(f"备用留言框选择器也失败: {str(e)}")
                             if comment_box:
                                 # 输入留言内容
                                 await comment_box.click()
@@ -145,12 +158,24 @@ class Crawler:
 
                                 # 等待发送按钮出现
                                 await asyncio.sleep(2)
-
-                                # 定位并点击发送按钮
-                                send_button_selector = "#barcelona-page-layout > div > div > div.xb57i2i.x1q594ok.x5lxg6s.x1ja2u2z.x1pq812k.x1rohswg.xfk6m8.x1yqm8si.xjx87ck.x1l7klhg.xs83m0k.x2lwn1j.xx8ngbg.xwo3gff.x1oyok0e.x1odjw0f.x1n2onr6.xq1qtft.xz401s1.x195bbgf.xgb0k9h.x1l19134.xgjo3nb.x1ga7v0g.x15mokao.x18b5jzi.x1q0q8m5.x1t7ytsu.x1ejq31n.xt8cgyo.x128c8uf.x1co6499.xc5fred.x1ma7e2m.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.xy5w88m.xh8yej3.xbwb3hm.xgh35ic.x19xvnzb.x87ppg5.xev1tu8.xpr2fh2.xgzc8be.x1y1aw1k > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div.x1c1b4dv.x13dflua.x11xpdln > div > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div:nth-child({}) > div > div > div > div > div.x49hn82.xcrlgei.xz9dl7a.xsag5q8 > div > div > div.x78zum5.xdt5ytf.xfp3qos.xh8yej3 > div.x78zum5.xh8yej3 > div.xuk3077.x78zum5.xdt5ytf.x1qughib.x1yrsyyn > div > div.x1i10hfl.xjqpnuy.xc5r6h4.xqeqjp1.x1phubyo.x13fuv20.x18b5jzi.x1q0q8m5.x1t7ytsu.x972fbf.x10w94by.x1qhh985.x14e42zd.x1ypdohk.xdl72j9.x2lah0s.xe8uvvx.xdj266r.x14z9mp.xat24cr.x1lziwak.x2lwn1j.xeuugli.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1n2onr6.x16tdsg8.x1hl2dhg.xggy1nq.x1ja2u2z.x1t137rt.x1q0g3np.x1lku1pv.x1a2a7pz.x6s0dn4.x9f619.x3nfvp2.x1s688f.xl56j7k.x87ps6o.xuxw1ft.x111bo7f.x1c9tyrk.xeusxvb.x1pahc9y.x1ertn4p.x10w6t97.xx6bhzk.x12w9bfk.x11xpdln.x1td3qas.xd3so5o.x1lcra6a".format(
-                                    i)
-                                send_button = await self.page.wait_for_selector(send_button_selector, timeout=5000)
-
+                                send_button = None
+                                try:
+                                    # 定位并点击发送按钮
+                                    send_button_selector = "#barcelona-page-layout > div > div > div.xb57i2i.x1q594ok.x5lxg6s.x1ja2u2z.x1pq812k.x1rohswg.xfk6m8.x1yqm8si.xjx87ck.x1l7klhg.xs83m0k.x2lwn1j.xx8ngbg.xwo3gff.x1oyok0e.x1odjw0f.x1n2onr6.xq1qtft.xz401s1.x195bbgf.xgb0k9h.x1l19134.xgjo3nb.x1ga7v0g.x15mokao.x18b5jzi.x1q0q8m5.x1t7ytsu.x1ejq31n.xt8cgyo.x128c8uf.x1co6499.xc5fred.x1ma7e2m.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.xy5w88m.xh8yej3.xbwb3hm.xgh35ic.x19xvnzb.x87ppg5.xev1tu8.xpr2fh2.xgzc8be.x1y1aw1k > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div.x1c1b4dv.x13dflua.x11xpdln > div > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div:nth-child({}) > div > div > div > div > div.x49hn82.xcrlgei.xz9dl7a.xsag5q8 > div > div > div.x78zum5.xdt5ytf.xfp3qos.xh8yej3 > div.x78zum5.xh8yej3 > div.xuk3077.x78zum5.xdt5ytf.x1qughib.x1yrsyyn > div > div.x1i10hfl.xjqpnuy.xc5r6h4.xqeqjp1.x1phubyo.x13fuv20.x18b5jzi.x1q0q8m5.x1t7ytsu.x972fbf.x10w94by.x1qhh985.x14e42zd.x1ypdohk.xdl72j9.x2lah0s.xe8uvvx.xdj266r.x14z9mp.xat24cr.x1lziwak.x2lwn1j.xeuugli.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1n2onr6.x16tdsg8.x1hl2dhg.xggy1nq.x1ja2u2z.x1t137rt.x1q0g3np.x1lku1pv.x1a2a7pz.x6s0dn4.x9f619.x3nfvp2.x1s688f.xl56j7k.x87ps6o.xuxw1ft.x111bo7f.x1c9tyrk.xeusxvb.x1pahc9y.x1ertn4p.x10w6t97.xx6bhzk.x12w9bfk.x11xpdln.x1td3qas.xd3so5o.x1lcra6a".format(
+                                        i)
+                                    send_button = await self.page.wait_for_selector(send_button_selector, timeout=5000)
+                                except Exception as e:
+                                    print(f"原始发送按钮选择器失败: {str(e)}")
+                                # 如果原始选择器失败，尝试备用选择器
+                                if not send_button:
+                                    try:
+                                        backup_selector = '//div[@role="dialog"]//div[text()="發佈" or text()="发布"]'
+                                        send_button = await self.page.wait_for_selector(backup_selector,
+                                                                                        timeout=3000)
+                                        if send_button:
+                                            print(f"使用备用选择器找到发送按钮")
+                                    except Exception as e:
+                                        print(f"备用發送按钮选择器也失败: {str(e)}")
                                 if send_button:
                                     await send_button.click()
                                     self.update_status(f"成功留言第 {i} 個帖子...")
@@ -161,6 +186,7 @@ class Crawler:
                                     print(f"发送按钮未找到，第 {i} 个帖子")
                             else:
                                 print(f"留言框未找到，第 {i} 个帖子")
+                                continue  # 跳过当前帖子的剩余操作
                 await asyncio.sleep(8)
             except Exception as e:
                 print(f"使用完整路径选择器也失败: {str(e)}")
@@ -283,7 +309,7 @@ class Crawler:
         for i in range(len(self.UsersLists)):
             self.update_status(f"打開用戶：@{self.UsersLists[i]} 主頁")
             await self.page.goto(url="https://www.threads.com/@"+str(self.UsersLists[i]), wait_until='load')
-            # await self.force_minimize_browser()
+            await self.force_minimize_browser()
             await asyncio.sleep(8)
 
             if self.user_Tracking and self.new_user_Tracking_num < self.user_Tracking_num:
@@ -397,11 +423,22 @@ class Crawler:
 
                             # 等待留言框出现
                             await asyncio.sleep(2)
-                            # 定位留言框并输入内容
-                            comment_box_selector = htmljsinput.format(
-                                i)
-                            comment_box = await self.page.wait_for_selector(comment_box_selector, timeout=5000)
-
+                            comment_box = None
+                            try:
+                                # 定位留言框并输入内容
+                                comment_box_selector = htmljsinput.format(
+                                    i)
+                                comment_box = await self.page.wait_for_selector(comment_box_selector, timeout=5000)
+                            except Exception as e:
+                                print(f"原始留言框选择器失败: {str(e)}")
+                            if not comment_box:
+                                try:
+                                    backup_selector = '//div[@role="dialog"]//div[@aria-label="文本栏为空白。请输入内容，撰写新帖子。" or @aria-label="文字欄位空白。請輸入內容以撰寫新貼文。"]'
+                                    comment_box = await self.page.wait_for_selector(backup_selector, timeout=3000)
+                                    if comment_box:
+                                        print(f"使用备用选择器找到留言框")
+                                except Exception as e:
+                                    print(f"备用留言框选择器也失败: {str(e)}")
                             if comment_box:
                                 # 输入留言内容
                                 await comment_box.click()
@@ -414,12 +451,23 @@ class Crawler:
 
                                 # 等待发送按钮出现
                                 await asyncio.sleep(2)
-
-                                # 定位并点击发送按钮
-                                send_button_selector = htmljsbut.format(
-                                    i)
-                                send_button = await self.page.wait_for_selector(send_button_selector, timeout=5000)
-
+                                send_button = None
+                                try:
+                                    # 定位并点击发送按钮
+                                    send_button_selector = htmljsbut.format(
+                                        i)
+                                    send_button = await self.page.wait_for_selector(send_button_selector, timeout=5000)
+                                except Exception as e:
+                                    print(f"原始发送按钮选择器失败: {str(e)}")
+                                if not send_button:
+                                    try:
+                                        backup_selector = '//div[@role="dialog"]//div[text()="發佈" or text()="发布"]'
+                                        send_button = await self.page.wait_for_selector(backup_selector,
+                                                                                        timeout=3000)
+                                        if send_button:
+                                            print(f"使用备用选择器找到发送按钮")
+                                    except Exception as e:
+                                        print(f"备用發送按钮选择器也失败: {str(e)}")
                                 if send_button:
                                     await send_button.click()
                                     print(f"成功发送留言第 {i} 个帖子")
@@ -429,6 +477,7 @@ class Crawler:
                                     print(f"发送按钮未找到，第 {i} 个帖子")
                             else:
                                 print(f"留言框未找到，第 {i} 个帖子")
+                                continue
                 await asyncio.sleep(8)
             except Exception as e:
                 print(f"使用完整路径选择器也失败: {str(e)}")
@@ -479,7 +528,7 @@ class Crawler:
                 send_button = await self.page.wait_for_selector(send_button_selector, timeout=5000)
 
                 if send_button:
-                    # await send_button.click()
+                    await send_button.click()
                     print(f"成功发送留言帖子")
                     # 等待留言发送完成
                     await asyncio.sleep(2)
@@ -496,7 +545,7 @@ class Crawler:
             print(self.Key[num])
             self.update_status(f"關鍵字: "+self.Key[num])
             await self.page.goto(url="https://www.threads.com/search?q=" + str(self.Key[num]), wait_until='load')
-            # await self.force_minimize_browser()
+            await self.force_minimize_browser()
             await asyncio.sleep(8)
 
             out_count = 0
@@ -530,11 +579,23 @@ class Crawler:
 
                                 # 等待留言框出现
                                 await asyncio.sleep(2)
-                                # 定位留言框并输入内容
-                                comment_box_selector = "#barcelona-page-layout > div > div > div.xb57i2i.x1q594ok.x5lxg6s.x1ja2u2z.x1pq812k.x1rohswg.xfk6m8.x1yqm8si.xjx87ck.x1l7klhg.xs83m0k.x2lwn1j.xx8ngbg.xwo3gff.x1oyok0e.x1odjw0f.x1n2onr6.xq1qtft.xz401s1.x195bbgf.xgb0k9h.x1l19134.xgjo3nb.x1ga7v0g.x15mokao.x18b5jzi.x1q0q8m5.x1t7ytsu.x1ejq31n.xt8cgyo.x128c8uf.x1co6499.xc5fred.x1ma7e2m.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.xy5w88m.xh8yej3.xbwb3hm.xgh35ic.x19xvnzb.x87ppg5.xev1tu8.xpr2fh2.xgzc8be.xz9dl7a > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div.x6s0dn4.xamitd3.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6.xh8yej3 > div > div.x1iyjqo2.x14vqqas > div > div > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div:nth-child({}) > div > div > div > div > div.x49hn82.xcrlgei.xz9dl7a.xsag5q8 > div > div > div.x78zum5.xdt5ytf.xfp3qos.xh8yej3 > div > div.x78zum5.x1cvoeml.xdt5ytf.xh8yej3 > div.x1ed109x.x7r5mf7.xh8yej3 > div > div.xzsf02u.xw2csxc.x1odjw0f.x1n2onr6.x1hnll1o.xpqswwc.notranslate".format(
-                                    i)
-                                comment_box = await self.page.wait_for_selector(comment_box_selector, timeout=5000)
-
+                                comment_box = None
+                                try:
+                                    # 定位留言框并输入内容
+                                    comment_box_selector = "#barcelona-page-layout > div > div > div.xb57i2i.x1q594ok.x5lxg6s.x1ja2u2z.x1pq812k.x1rohswg.xfk6m8.x1yqm8si.xjx87ck.x1l7klhg.xs83m0k.x2lwn1j.xx8ngbg.xwo3gff.x1oyok0e.x1odjw0f.x1n2onr6.xq1qtft.xz401s1.x195bbgf.xgb0k9h.x1l19134.xgjo3nb.x1ga7v0g.x15mokao.x18b5jzi.x1q0q8m5.x1t7ytsu.x1ejq31n.xt8cgyo.x128c8uf.x1co6499.xc5fred.x1ma7e2m.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.xy5w88m.xh8yej3.xbwb3hm.xgh35ic.x19xvnzb.x87ppg5.xev1tu8.xpr2fh2.xgzc8be.xz9dl7a > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div.x6s0dn4.xamitd3.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6.xh8yej3 > div > div.x1iyjqo2.x14vqqas > div > div > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div:nth-child({}) > div > div > div > div > div.x49hn82.xcrlgei.xz9dl7a.xsag5q8 > div > div > div.x78zum5.xdt5ytf.xfp3qos.xh8yej3 > div > div.x78zum5.x1cvoeml.xdt5ytf.xh8yej3 > div.x1ed109x.x7r5mf7.xh8yej3 > div > div.xzsf02u.xw2csxc.x1odjw0f.x1n2onr6.x1hnll1o.xpqswwc.notranslate".format(
+                                        i)
+                                    comment_box = await self.page.wait_for_selector(comment_box_selector, timeout=5000)
+                                except Exception as e:
+                                    print(f"原始留言框选择器失败: {str(e)}")
+                                # 如果原始选择器失败，尝试备用选择器
+                                if not comment_box:
+                                    try:
+                                        backup_selector = '//div[@role="dialog"]//div[@aria-label="文本栏为空白。请输入内容，撰写新帖子。" or @aria-label="文字欄位空白。請輸入內容以撰寫新貼文。"]'
+                                        comment_box = await self.page.wait_for_selector(backup_selector, timeout=3000)
+                                        if comment_box:
+                                            print(f"使用备用选择器找到留言框")
+                                    except Exception as e:
+                                        print(f"备用留言框选择器也失败: {str(e)}")
                                 if comment_box:
                                     # 输入留言内容
                                     await comment_box.click()
@@ -547,12 +608,23 @@ class Crawler:
 
                                     # 等待发送按钮出现
                                     await asyncio.sleep(2)
-
-                                    # 定位并点击发送按钮
-                                    send_button_selector = "#barcelona-page-layout > div > div > div.xb57i2i.x1q594ok.x5lxg6s.x1ja2u2z.x1pq812k.x1rohswg.xfk6m8.x1yqm8si.xjx87ck.x1l7klhg.xs83m0k.x2lwn1j.xx8ngbg.xwo3gff.x1oyok0e.x1odjw0f.x1n2onr6.xq1qtft.xz401s1.x195bbgf.xgb0k9h.x1l19134.xgjo3nb.x1ga7v0g.x15mokao.x18b5jzi.x1q0q8m5.x1t7ytsu.x1ejq31n.xt8cgyo.x128c8uf.x1co6499.xc5fred.x1ma7e2m.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.xy5w88m.xh8yej3.xbwb3hm.xgh35ic.x19xvnzb.x87ppg5.xev1tu8.xpr2fh2.xgzc8be.xz9dl7a > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div.x6s0dn4.xamitd3.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6.xh8yej3 > div > div.x1iyjqo2.x14vqqas > div > div > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div:nth-child({}) > div > div > div > div > div.x49hn82.xcrlgei.xz9dl7a.xsag5q8 > div > div > div.x78zum5.xdt5ytf.xfp3qos.xh8yej3 > div > div.xuk3077.x78zum5.xdt5ytf.x1qughib.x1yrsyyn > div > div.x1i10hfl.xjqpnuy.xc5r6h4.xqeqjp1.x1phubyo.x13fuv20.x18b5jzi.x1q0q8m5.x1t7ytsu.x972fbf.x10w94by.x1qhh985.x14e42zd.x1ypdohk.xdl72j9.x2lah0s.xe8uvvx.xdj266r.x14z9mp.xat24cr.x1lziwak.x2lwn1j.xeuugli.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1n2onr6.x16tdsg8.x1hl2dhg.xggy1nq.x1ja2u2z.x1t137rt.x1q0g3np.x1lku1pv.x1a2a7pz.x6s0dn4.x9f619.x3nfvp2.x1s688f.xl56j7k.x87ps6o.xuxw1ft.x111bo7f.x1c9tyrk.xeusxvb.x1pahc9y.x1ertn4p.x10w6t97.xx6bhzk.x12w9bfk.x11xpdln.x1td3qas.xd3so5o.x1lcra6a".format(
-                                        i)
-                                    send_button = await self.page.wait_for_selector(send_button_selector, timeout=5000)
-
+                                    send_button = None
+                                    try:
+                                        # 定位并点击发送按钮
+                                        send_button_selector = "#barcelona-page-layout > div > div > div.xb57i2i.x1q594ok.x5lxg6s.x1ja2u2z.x1pq812k.x1rohswg.xfk6m8.x1yqm8si.xjx87ck.x1l7klhg.xs83m0k.x2lwn1j.xx8ngbg.xwo3gff.x1oyok0e.x1odjw0f.x1n2onr6.xq1qtft.xz401s1.x195bbgf.xgb0k9h.x1l19134.xgjo3nb.x1ga7v0g.x15mokao.x18b5jzi.x1q0q8m5.x1t7ytsu.x1ejq31n.xt8cgyo.x128c8uf.x1co6499.xc5fred.x1ma7e2m.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.xy5w88m.xh8yej3.xbwb3hm.xgh35ic.x19xvnzb.x87ppg5.xev1tu8.xpr2fh2.xgzc8be.xz9dl7a > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div.x6s0dn4.xamitd3.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6.xh8yej3 > div > div.x1iyjqo2.x14vqqas > div > div > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div:nth-child({}) > div > div > div > div > div.x49hn82.xcrlgei.xz9dl7a.xsag5q8 > div > div > div.x78zum5.xdt5ytf.xfp3qos.xh8yej3 > div > div.xuk3077.x78zum5.xdt5ytf.x1qughib.x1yrsyyn > div > div.x1i10hfl.xjqpnuy.xc5r6h4.xqeqjp1.x1phubyo.x13fuv20.x18b5jzi.x1q0q8m5.x1t7ytsu.x972fbf.x10w94by.x1qhh985.x14e42zd.x1ypdohk.xdl72j9.x2lah0s.xe8uvvx.xdj266r.x14z9mp.xat24cr.x1lziwak.x2lwn1j.xeuugli.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1n2onr6.x16tdsg8.x1hl2dhg.xggy1nq.x1ja2u2z.x1t137rt.x1q0g3np.x1lku1pv.x1a2a7pz.x6s0dn4.x9f619.x3nfvp2.x1s688f.xl56j7k.x87ps6o.xuxw1ft.x111bo7f.x1c9tyrk.xeusxvb.x1pahc9y.x1ertn4p.x10w6t97.xx6bhzk.x12w9bfk.x11xpdln.x1td3qas.xd3so5o.x1lcra6a".format(
+                                            i)
+                                        send_button = await self.page.wait_for_selector(send_button_selector, timeout=5000)
+                                    except Exception as e:
+                                        print(f"原始发送按钮选择器失败: {str(e)}")
+                                    if not send_button:
+                                        try:
+                                            backup_selector = '//div[@role="dialog"]//div[text()="發佈" or text()="发布"]'
+                                            send_button = await self.page.wait_for_selector(backup_selector,
+                                                                                            timeout=3000)
+                                            if send_button:
+                                                print(f"使用备用选择器找到发送按钮")
+                                        except Exception as e:
+                                            print(f"备用發送按钮选择器也失败: {str(e)}")
                                     if send_button:
                                         await send_button.click()
                                         self.update_status(f"成功留言第 {i} 個帖子...")
@@ -563,6 +635,7 @@ class Crawler:
                                         print(f"发送按钮未找到，第 {i} 个帖子")
                                 else:
                                     print(f"留言框未找到，第 {i} 个帖子")
+                                    continue
                     await asyncio.sleep(8)
                 except Exception as e:
                     print(f"使用完整路径选择器也失败: {str(e)}")
@@ -573,7 +646,7 @@ class Crawler:
                     continue
     async def Personal_is_message(self):
         await self.page.goto(url="https://www.threads.com/", wait_until='load')
-        # await self.force_minimize_browser()
+        await self.force_minimize_browser()
         await asyncio.sleep(8)
         try:
             # 等待點擊發文框出现
