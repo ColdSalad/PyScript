@@ -317,6 +317,9 @@ class Crawler:
                 self.update_status("用戶追蹤...")
                 print("追踪")
                 await self.UsersTracking()
+                # 添加短暂延迟，确保追踪操作完成
+                await asyncio.sleep(2)
+
             if self.fans and self.new_fans_num < self.fans_num:
                 self.update_status("@粉絲發送信息...")
                 print("@粉丝")
@@ -324,6 +327,9 @@ class Crawler:
                 htmljsinput = '//div[@contenteditable="true" and @aria-placeholder="有什麼新鮮事？"or @contenteditable="true" and @aria-placeholder="有什麼新鮮事嗎？" or @contenteditable="true" and @aria-placeholder="有什么新鲜事？" or @contenteditable="true" and @aria-placeholder="有什么新鲜事吗？"]/p/span[2]'
                 htmljsbut = '//div[text()="發佈" or text()="发布"]'
                 await self.Personal_post(htmljsinput, htmljsbut)
+                # 添加短暂延迟，确保操作完成
+                await asyncio.sleep(2)
+
             if self.Like:
                 self.update_status("個人主頁點讚...")
                 print("点赞")
@@ -348,7 +354,8 @@ class Crawler:
             print("获取的文本：", text)
             if text =="已关注" or text =="追蹤中":
                 self.update_status("已經追蹤跳過...")
-                return
+                await asyncio.sleep(8)
+                return False
             if element:
                 await element.scroll_into_view_if_needed()
                 await asyncio.sleep(1)
@@ -356,13 +363,15 @@ class Crawler:
                 print(f"成功点击追踪")
                 self.new_user_Tracking_num += 1
             await asyncio.sleep(8)
+            return True
         except Exception as e:
             print(f"使用完整路径选择器也失败: {str(e)}")
-            return
+            return False
 
     async def UsersFans(self):
         try:
             base_selector = "#barcelona-page-layout > div > div > div.xb57i2i.x1q594ok.x5lxg6s.x1ja2u2z.x1pq812k.x1rohswg.xfk6m8.x1yqm8si.xjx87ck.x1l7klhg.xs83m0k.x2lwn1j.xx8ngbg.xwo3gff.x1oyok0e.x1odjw0f.x1n2onr6.xq1qtft.xz401s1.x195bbgf.xgb0k9h.x1l19134.xgjo3nb.x1ga7v0g.x15mokao.x18b5jzi.x1q0q8m5.x1t7ytsu.x1ejq31n.xt8cgyo.x128c8uf.x1co6499.xc5fred.x1ma7e2m.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.xy5w88m.xh8yej3.xbwb3hm.xgh35ic.x19xvnzb.x87ppg5.xev1tu8.xpr2fh2.xgzc8be.x1iorvi4 > div.x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6 > div:nth-child(2) > div > div:nth-child(2)"
+            # base_selector = '//div[text()="提及"]'
             element = await self.page.wait_for_selector(base_selector, timeout=10000)
             if element:
                 await element.scroll_into_view_if_needed()

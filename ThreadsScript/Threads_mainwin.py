@@ -177,10 +177,15 @@ class MyApp(QWidget):
             print("错误：密碼不能为空")
             QMessageBox.warning(self, "输入错误", "错误：密碼不能为空", QMessageBox.Ok)
             return  # 终止函数执行
+        # for i in range(3):
+        #     self.button.setText(f"登錄中{'...'[:i + 1]}")
+        #     self.button.repaint()
+        #     await asyncio.sleep(0.5)
         login = requests.get("http://aj.ry188.vip/api/Login.aspx?Account=" + content1 + "&PassWord=" + content2,
                              timeout=15).text
         if "no" in login or "ok" in login:
             QMessageBox.warning(self, "登錄错误", "错误：賬號或密碼錯誤！", QMessageBox.Ok)
+            # self.button.setText("確定")
             return
         # 所有验证通过后的处理
         print(f"设备号: {content0}")
