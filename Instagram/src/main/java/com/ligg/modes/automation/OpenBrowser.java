@@ -15,7 +15,6 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.edge.EdgeOptions;
-import org.openqa.selenium.Cookie;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
@@ -88,8 +87,10 @@ public class OpenBrowser {
                             alert.setHeaderText("账号或密码有误");
                             alert.showAndWait();
                         });
-                        loginButton.setText("重新登录");
-                        loginButton.setDisable(false);
+                        Platform.runLater(() -> {
+                            loginButton.setText("重新登录");
+                            loginButton.setDisable(false);
+                        });
                         return;
                     }
                     //获取登录后的Cookie

@@ -35,7 +35,7 @@ public class HttpRequest {
                 return response.body().string();
             }
         } catch (Exception e) {
-            log.error("发送登录请求失败");
+            log.error("发送登录请求失败",e);
         }
         return null;
     }
