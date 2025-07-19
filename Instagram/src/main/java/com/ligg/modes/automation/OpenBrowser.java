@@ -7,10 +7,8 @@ import com.ligg.modes.util.CookieUtil;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.jetbrains.annotations.NotNull;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
@@ -45,46 +43,40 @@ public class OpenBrowser {
         //创建一个线程用于打开浏览器，避免GUI阻塞主线程
         new Thread(() -> {
             try {
-                //默认启动Edge浏览器
-                log.info("尝试启动Edge浏览器...");
-                EdgeOptions edgeOptions = new EdgeOptions();
-                edgeOptions.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-                driver = new EdgeDriver(edgeOptions);
-            } catch (Exception e) {
-                log.info("Edge启动失败，尝试启动Chrome浏览器...");
+                log.info("尝试启动Chrome浏览器...");
                 ChromeOptions chromeOptions = new ChromeOptions();
                 chromeOptions.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
                 driver = new ChromeDriver(chromeOptions);
+            } catch (Exception e) {
+                //默认启动Edge浏览器
+                log.info("Chrome启动失败，尝试启动Edge浏览器...");
+                EdgeOptions edgeOptions = new EdgeOptions();
+                edgeOptions.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                driver = new EdgeDriver(edgeOptions);
             }
             driver.get("https://www.instagram.com/?next=%2F");
+            try {
 
-            // 从JSON文件读取并应用Cookie
-            Map<String, String> savedCookies = CookieUtil.loadCookieFromJson();
-            if (!savedCookies.isEmpty()) {
-                log.info("从JSON文件加载Cookie，共{}个", savedCookies.size());
-                CookieUtil.applyCookiesToDriver(driver, savedCookies);
-                // 刷新页面以应用Cookie
-                driver.navigate().refresh();
-            } else {
+                Thread.sleep(5000);
+                //选中账号、密码输入框
+                WebElement usernameInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[1]/div/label/input"));
+                WebElement passwordInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[2]/div/label/input"));
+                usernameInput.sendKeys(username);
+                passwordInput.sendKeys(password);
+
+                //点击登录按钮
+                WebElement webLoginButton = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[3]/button"));
+                webLoginButton.click();
+
+                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
                 try {
-                    Thread.sleep(5000);
-                    //选中账号、密码输入框
-                    WebElement usernameInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[1]/div/label/input"));
-                    WebElement passwordInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[2]/div/label/input"));
-                    usernameInput.sendKeys(username);
-                    passwordInput.sendKeys(password);
-
-                    //点击登录按钮
-                    WebElement webLoginButton = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[3]/button"));
-                    webLoginButton.click();
-
-                    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+                    // 尝试查找错误消息，如果找到说明登录失败
                     WebElement error = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[normalize-space()='很抱歉，密码有误，请检查密码。']")));
                     if (error.isDisplayed()) {
                         Platform.runLater(() -> {
                             Alert alert = new Alert(Alert.AlertType.WARNING);
                             alert.setTitle("提示");
-                            alert.setHeaderText("账号或密码有误");
+                            alert.setHeaderText(error.getText());
                             alert.showAndWait();
                         });
                         Platform.runLater(() -> {
@@ -93,50 +85,52 @@ public class OpenBrowser {
                         });
                         return;
                     }
-                    //获取登录后的Cookie
-                    String datrCookie = CookieUtil.getCookieByNameAndDomain(driver, "datr", "www.instagram.com");
-                    String ig_didCookie = CookieUtil.getCookieByNameAndDomain(driver, "ig_did", "www.instagram.com");
-                    String midCookie = CookieUtil.getCookieByNameAndDomain(driver, "mid", ".instagram.com");
-                    String ps_lCookie = CookieUtil.getCookieByNameAndDomain(driver, "ps_l", "www.instagram.com");
-                    String ps_nCookie = CookieUtil.getCookieByNameAndDomain(driver, "ps_n", "www.instagram.com");
-                    String ig_nrcbCookie = CookieUtil.getCookieByNameAndDomain(driver, "ig_nrcb", "www.instagram.com");
-                    String csrftokenCookie = CookieUtil.getCookieByNameAndDomain(driver, "csrftoken", ".instagram.com");
-                    String dprCookie = CookieUtil.getCookieByNameAndDomain(driver, "dpr", "www.instagram.com");
-                    String localeCookie = CookieUtil.getCookieByNameAndDomain(driver, "locale", "www.instagram.com");
-                    String ig_langCookie = CookieUtil.getCookieByNameAndDomain(driver, "ig_lang", "www.instagram.com");
-                    String sessionidCookie = CookieUtil.getCookieByNameAndDomain(driver, "sessionid", "www.instagram.com");
-                    String ds_user_idCookie = CookieUtil.getCookieByNameAndDomain(driver, "ds_user_id", ".instagram.com");
-                    String wdCookie = CookieUtil.getCookieByNameAndDomain(driver, "wd", "www.instagram.com");
-                    String rurCookie = CookieUtil.getCookieByNameAndDomain(driver, "rur", "www.instagram.com");
-
-                    Thread.sleep(3000);
-                    HashMap<String, String> cookieMap = new HashMap<>();
-                    cookieMap.put("datr", datrCookie);
-                    cookieMap.put("ig_did", ig_didCookie);
-                    cookieMap.put("mid", midCookie);
-                    cookieMap.put("ps_l", ps_lCookie);
-                    cookieMap.put("ps_n", ps_nCookie);
-                    cookieMap.put("ig_nrcb", ig_nrcbCookie);
-                    cookieMap.put("csrftoken", csrftokenCookie);
-                    cookieMap.put("dpr", dprCookie);
-                    cookieMap.put("locale", localeCookie);
-                    cookieMap.put("ig_lang", ig_langCookie);
-                    cookieMap.put("sessionid", sessionidCookie);
-                    cookieMap.put("ds_user_id", ds_user_idCookie);
-                    cookieMap.put("wd", wdCookie);
-                    cookieMap.put("rur", rurCookie);
-
-                    //保存Cookie
-                    CookieUtil.saveCookieToJson(cookieMap);
-                    Thread.sleep(5000);
-                    var homeButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(1) > div > span > div > a > div")));
-                    homeButton.click();
-
-                    //点赞
-                    like(driver, loginButton);
-                } catch (InterruptedException e) {
-                    log.error("网页加载超时");
+                } catch (org.openqa.selenium.TimeoutException e) {
+                    // 没有找到错误消息，说明登录成功，继续执行
+                    log.info("登录成功，未发现错误消息");
                 }
+//                    //获取登录后的Cookie
+//                    String datrCookie = CookieUtil.getCookieByNameAndDomain(driver, "datr", "www.instagram.com");
+//                    String ig_didCookie = CookieUtil.getCookieByNameAndDomain(driver, "ig_did", "www.instagram.com");
+//                    String midCookie = CookieUtil.getCookieByNameAndDomain(driver, "mid", ".instagram.com");
+//                    String ps_lCookie = CookieUtil.getCookieByNameAndDomain(driver, "ps_l", "www.instagram.com");
+//                    String ps_nCookie = CookieUtil.getCookieByNameAndDomain(driver, "ps_n", "www.instagram.com");
+//                    String ig_nrcbCookie = CookieUtil.getCookieByNameAndDomain(driver, "ig_nrcb", "www.instagram.com");
+//                    String csrftokenCookie = CookieUtil.getCookieByNameAndDomain(driver, "csrftoken", ".instagram.com");
+//                    String dprCookie = CookieUtil.getCookieByNameAndDomain(driver, "dpr", "www.instagram.com");
+//                    String localeCookie = CookieUtil.getCookieByNameAndDomain(driver, "locale", "www.instagram.com");
+//                    String ig_langCookie = CookieUtil.getCookieByNameAndDomain(driver, "ig_lang", "www.instagram.com");
+//                    String sessionidCookie = CookieUtil.getCookieByNameAndDomain(driver, "sessionid", "www.instagram.com");
+//                    String ds_user_idCookie = CookieUtil.getCookieByNameAndDomain(driver, "ds_user_id", ".instagram.com");
+//                    String wdCookie = CookieUtil.getCookieByNameAndDomain(driver, "wd", "www.instagram.com");
+//                    String rurCookie = CookieUtil.getCookieByNameAndDomain(driver, "rur", "www.instagram.com");
+//
+//                    Thread.sleep(3000);
+//                    HashMap<String, String> cookieMap = new HashMap<>();
+//                    cookieMap.put("datr", datrCookie);
+//                    cookieMap.put("ig_did", ig_didCookie);
+//                    cookieMap.put("mid", midCookie);
+//                    cookieMap.put("ps_l", ps_lCookie);
+//                    cookieMap.put("ps_n", ps_nCookie);
+//                    cookieMap.put("ig_nrcb", ig_nrcbCookie);
+//                    cookieMap.put("csrftoken", csrftokenCookie);
+//                    cookieMap.put("dpr", dprCookie);
+//                    cookieMap.put("locale", localeCookie);
+//                    cookieMap.put("ig_lang", ig_langCookie);
+//                    cookieMap.put("sessionid", sessionidCookie);
+//                    cookieMap.put("ds_user_id", ds_user_idCookie);
+//                    cookieMap.put("wd", wdCookie);
+//                    cookieMap.put("rur", rurCookie);
+
+//                    保存Cookie
+//                    CookieUtil.saveCookieToJson(cookieMap);
+                Thread.sleep(5000);
+                var homeButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(1) > div > span > div > a > div")));
+                homeButton.click();
+                //点赞
+                like(driver, loginButton);
+            } catch (InterruptedException e) {
+                log.error("网页加载超时");
             }
         }).start();
     }
@@ -201,10 +195,6 @@ public class OpenBrowser {
                 }
 
                 log.info("点赞完成，共点赞{}个帖子", likedCount);
-            /*
-             开始评论
-             */
-                comment(driver, loginButton);
             } catch (InterruptedException e) {
                 log.error("点赞过程中发生异常：{}", e.getMessage());
             }
@@ -236,7 +226,7 @@ public class OpenBrowser {
     }
 
     /**
-     * 评论方法 - 自动滚动页面并对多个帖子进行评论
+     * 评论方法
      */
     public void comment(WebDriver driver, Button loginButton) {
         log.info("开始自动评论...");
@@ -313,6 +303,14 @@ public class OpenBrowser {
             } catch (Exception e) {
                 log.warn("在弹窗中未找到或无法点击评论图标，将直接尝试输入评论。");
                 // 即使找不到图标，也继续尝试，因为UI可能已经允许直接输入
+            }
+
+            // 检测是否限制评论
+            WebElement restrictedComment = driver.findElement(By.xpath("//span[normalize-space()='这篇帖子限制评论了。']"));
+            if (restrictedComment != null && restrictedComment.isDisplayed()) {
+                log.warn("检测到帖子限制评论，跳过该帖子");
+                closeCommentBox(js);
+                return false;
             }
             boolean success = submitComment(driver, js, commentedCount);
             closeCommentBox(js);
@@ -408,7 +406,7 @@ public class OpenBrowser {
     /**
      * 关闭评论弹窗
      */
-    private void closeCommentBox(JavascriptExecutor js) {
+    private void closeCommentBox(@NotNull JavascriptExecutor js) {
         //关闭弹窗
         String closeButtonSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.xo2ifbc.x10l6tqk.x1eu8d0j.x1vjfegm > div > div";
         js.executeScript("document.querySelector('" + closeButtonSelector + "').click();");

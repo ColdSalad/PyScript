@@ -11,6 +11,7 @@ module instagram.automation {
     requires com.google.common;
     requires okhttp3;
     requires com.google.gson;
+    requires annotations;
 
     exports com.ligg.modes.ui;
     exports com.ligg.modes.pojo to com.google.gson;
