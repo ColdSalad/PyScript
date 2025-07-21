@@ -59,6 +59,19 @@ public final class CookieUtil {
 
 
     /**
+     * 根据Cookie名称和domain获取Value
+     *
+     * @param driver 浏览器驱动
+     * @param cookieName Cookie名称
+     * @param domain Cookie域
+     * @return Cookie值
+     */
+    public static String getCookieValueByNameAndDomain(WebDriver driver, String cookieName, String domain) {
+        Cookie cookie = driver.manage().getCookieNamed(cookieName);
+        return cookie != null && cookie.getDomain().equals(domain) ? cookie.getValue() : null;
+    }
+
+    /**
      * 从JSON文件读取Cookie
      *
      * @param filePath JSON文件路径，如果为null则使用默认路径"cookies.json"
@@ -68,13 +81,13 @@ public final class CookieUtil {
         if (filePath == null) {
             filePath = "cookies.json";
         }
-
+        
         File file = new File(filePath);
         if (!file.exists()) {
             log.warn("Cookie文件不存在: {}", file.getAbsolutePath());
             return new HashMap<>();
         }
-
+        
         Gson gson = new Gson();
         try (FileReader reader = new FileReader(file)) {
             Type type = new TypeToken<Map<String, String>>(){}.getType();
@@ -107,7 +120,7 @@ public final class CookieUtil {
             log.warn("Cookie映射表为空，跳过应用");
             return;
         }
-
+        
         for (Map.Entry<String, String> entry : cookies.entrySet()) {
             String name = entry.getKey();
             String value = entry.getValue();
