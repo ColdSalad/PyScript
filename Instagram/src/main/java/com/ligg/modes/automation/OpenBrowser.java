@@ -5,7 +5,6 @@ import com.ligg.modes.pojo.Data;
 import com.ligg.modes.pojo.ProfilePage;
 import com.ligg.modes.util.CookieUtil;
 import javafx.application.Platform;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -23,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.Map;
 
 
 /**
@@ -59,16 +57,30 @@ public class OpenBrowser {
             }
             driver.get("https://www.instagram.com/?next=%2F");
 
-            // 从JSON文件读取并应用Cookie
-            Map<String, String> savedCookies = CookieUtil.loadCookieFromJson();
-            if (!savedCookies.isEmpty()) {
-                log.info("从JSON文件加载Cookie，共{}个", savedCookies.size());
-                CookieUtil.applyCookiesToDriver(driver, savedCookies);
-                // 刷新页面以应用Cookie
-                driver.navigate().refresh();
-            } else {
-                try {
-                    Thread.sleep(5000);
+            // 添加Cookie
+            driver.manage().addCookie(new Cookie("datr", "SMBcaGd5pEN9TBbgTHpG5Zx6"));
+            driver.manage().addCookie(new Cookie("ig_did", "9708FC04-B966-418F-AED7-5BA6E6E365F7"));
+            driver.manage().addCookie(new Cookie("mid", "aFzASAALAAGXyzxb-4jLQyPiW8HD"));
+            driver.manage().addCookie(new Cookie("ps_l", "1"));
+            driver.manage().addCookie(new Cookie("ps_n", "1"));
+            driver.manage().addCookie(new Cookie("ig_nrcb", "1"));
+            driver.manage().addCookie(new Cookie("csrftoken", "GzbiGK1BfjlBpw5Jm2w8Ej9Ab3fRTkey"));
+            driver.manage().addCookie(new Cookie("dpr", "1"));
+            driver.manage().addCookie(new Cookie("locale", "en_US"));
+            driver.manage().addCookie(new Cookie("ig_lang", "en-gb"));
+            driver.manage().addCookie(new Cookie("sessionid", "76140321107%3AFLdGWmR8kCQXf0%3A23%3AAYcb1skSaonIIN0IGcWEKL4H6LLW8dpoIcRWbmyAAQ"));
+            driver.manage().addCookie(new Cookie("ds_user_id", "76140321107"));
+            driver.manage().addCookie(new Cookie("wd", "855x895"));
+            driver.manage().addCookie(new Cookie("rur", "\"NHA\\05476140321107\\0541784198456:01fe5bbc0e77bbdbcdbce81c90f4b055c2359eeba999e9f9f132248df988ccec07ec5141\""));
+
+            // 刷新页面以应用Cookie
+            driver.navigate().refresh();
+
+            // 自动登录逻辑
+            try {
+                Thread.sleep(5000);
+
+                if (!driver.getCurrentUrl().equals("https://www.instagram.com/?next=%2F")) {
                     //选中账号、密码输入框
                     WebElement usernameInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[1]/div/label/input"));
                     WebElement passwordInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[2]/div/label/input"));
@@ -78,64 +90,67 @@ public class OpenBrowser {
                     //点击登录按钮
                     WebElement webLoginButton = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[3]/button"));
                     webLoginButton.click();
-
-                    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-                    WebElement error = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[normalize-space()='很抱歉，密码有误，请检查密码。']")));
-                    if (error.isDisplayed()) {
-                        Platform.runLater(() -> {
-                            Alert alert = new Alert(Alert.AlertType.WARNING);
-                            alert.setTitle("提示");
-                            alert.setHeaderText("账号或密码有误");
-                            alert.showAndWait();
-                        });
-                        loginButton.setText("重新登录");
-                        loginButton.setDisable(false);
-                        return;
-                    }
-                    //获取登录后的Cookie
-                    String datrCookie = CookieUtil.getCookieByNameAndDomain(driver, "datr", "www.instagram.com");
-                    String ig_didCookie = CookieUtil.getCookieByNameAndDomain(driver, "ig_did", "www.instagram.com");
-                    String midCookie = CookieUtil.getCookieByNameAndDomain(driver, "mid", ".instagram.com");
-                    String ps_lCookie = CookieUtil.getCookieByNameAndDomain(driver, "ps_l", "www.instagram.com");
-                    String ps_nCookie = CookieUtil.getCookieByNameAndDomain(driver, "ps_n", "www.instagram.com");
-                    String ig_nrcbCookie = CookieUtil.getCookieByNameAndDomain(driver, "ig_nrcb", "www.instagram.com");
-                    String csrftokenCookie = CookieUtil.getCookieByNameAndDomain(driver, "csrftoken", ".instagram.com");
-                    String dprCookie = CookieUtil.getCookieByNameAndDomain(driver, "dpr", "www.instagram.com");
-                    String localeCookie = CookieUtil.getCookieByNameAndDomain(driver, "locale", "www.instagram.com");
-                    String ig_langCookie = CookieUtil.getCookieByNameAndDomain(driver, "ig_lang", "www.instagram.com");
-                    String sessionidCookie = CookieUtil.getCookieByNameAndDomain(driver, "sessionid", "www.instagram.com");
-                    String ds_user_idCookie = CookieUtil.getCookieByNameAndDomain(driver, "ds_user_id", ".instagram.com");
-                    String wdCookie = CookieUtil.getCookieByNameAndDomain(driver, "wd", "www.instagram.com");
-                    String rurCookie = CookieUtil.getCookieByNameAndDomain(driver, "rur", "www.instagram.com");
-
-                    Thread.sleep(3000);
-                    HashMap<String, String> cookieMap = new HashMap<>();
-                    cookieMap.put("datr", datrCookie);
-                    cookieMap.put("ig_did", ig_didCookie);
-                    cookieMap.put("mid", midCookie);
-                    cookieMap.put("ps_l", ps_lCookie);
-                    cookieMap.put("ps_n", ps_nCookie);
-                    cookieMap.put("ig_nrcb", ig_nrcbCookie);
-                    cookieMap.put("csrftoken", csrftokenCookie);
-                    cookieMap.put("dpr", dprCookie);
-                    cookieMap.put("locale", localeCookie);
-                    cookieMap.put("ig_lang", ig_langCookie);
-                    cookieMap.put("sessionid", sessionidCookie);
-                    cookieMap.put("ds_user_id", ds_user_idCookie);
-                    cookieMap.put("wd", wdCookie);
-                    cookieMap.put("rur", rurCookie);
-
-                    //保存Cookie
-                    CookieUtil.saveCookieToJson(cookieMap);
-                    Thread.sleep(5000);
-                    var homeButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(1) > div > span > div > a > div")));
-                    homeButton.click();
-
-                    //点赞
-                    like(driver, loginButton);
-                } catch (InterruptedException e) {
-                    log.error("网页加载超时");
                 }
+                Thread.sleep(5000);
+                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+                var homeButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(1) > div > span > div > a > div")));
+                homeButton.click();
+
+                //获取登录后的Cookie
+                String datrCookie = CookieUtil.getCookieByNameAndDomain(driver, "datr", "www.instagram.com");
+                String ig_didCookie = CookieUtil.getCookieByNameAndDomain(driver, "ig_did", "www.instagram.com");
+                String midCookie = CookieUtil.getCookieByNameAndDomain(driver, "mid", ".instagram.com");
+                String ps_lCookie = CookieUtil.getCookieByNameAndDomain(driver, "ps_l", "www.instagram.com");
+                String ps_nCookie = CookieUtil.getCookieByNameAndDomain(driver, "ps_n", "www.instagram.com");
+                String ig_nrcbCookie = CookieUtil.getCookieByNameAndDomain(driver, "ig_nrcb", "www.instagram.com");
+                String csrftokenCookie = CookieUtil.getCookieByNameAndDomain(driver, "csrftoken", ".instagram.com");
+                String dprCookie = CookieUtil.getCookieByNameAndDomain(driver, "dpr", "www.instagram.com");
+                String localeCookie = CookieUtil.getCookieByNameAndDomain(driver, "locale", "www.instagram.com");
+                String ig_langCookie = CookieUtil.getCookieByNameAndDomain(driver, "ig_lang", "www.instagram.com");
+                String sessionidCookie = CookieUtil.getCookieByNameAndDomain(driver, "sessionid", "www.instagram.com");
+                String ds_user_idCookie = CookieUtil.getCookieByNameAndDomain(driver, "ds_user_id", ".instagram.com");
+                String wdCookie = CookieUtil.getCookieByNameAndDomain(driver, "wd", "www.instagram.com");
+                String rurCookie = CookieUtil.getCookieByNameAndDomain(driver, "rur", "www.instagram.com");
+
+                HashMap<String, String> cookieMap = new HashMap<>();
+                cookieMap.put("datr", datrCookie);
+                cookieMap.put("ig_did", ig_didCookie);
+                cookieMap.put("mid", midCookie);
+                cookieMap.put("ps_l", ps_lCookie);
+                cookieMap.put("ps_n", ps_nCookie);
+                cookieMap.put("ig_nrcb", ig_nrcbCookie);
+                cookieMap.put("csrftoken", csrftokenCookie);
+                cookieMap.put("dpr", dprCookie);
+                cookieMap.put("locale", localeCookie);
+                cookieMap.put("ig_lang", ig_langCookie);
+                cookieMap.put("sessionid", sessionidCookie);
+                cookieMap.put("ds_user_id", ds_user_idCookie);
+                cookieMap.put("wd", wdCookie);
+                cookieMap.put("rur", rurCookie);
+
+                //保存Cookie
+                CookieUtil.saveCookieToJson(cookieMap);
+
+//                System.out.println("datr:" + datrCookie);
+//                System.out.println("ig_did:"+ig_didCookie);
+//                System.out.println("mid:"+midCookie);
+//                System.out.println("ps_l:"+ps_lCookie);
+//                System.out.println("ps_n:"+ps_nCookie);
+//                System.out.println("ig_nrcb:"+ig_nrcbCookie);
+//                System.out.println("csrftoken:"+csrftokenCookie);
+//                System.out.println("dpr:"+dprCookie);
+//                System.out.println("locale:"+localeCookie);
+//                System.out.println("ig_lang:"+ig_langCookie);
+//                System.out.println("sessionid:"+sessionidCookie);
+//                System.out.println("ds_user_id:"+ds_user_idCookie);
+//                System.out.println("wd:"+wdCookie);
+//                System.out.println("rur:"+rurCookie);
+
+
+                //点赞
+                like(driver, loginButton);
+            } catch (InterruptedException e) {
+                log.error("网页加载超时");
             }
         }).start();
     }
