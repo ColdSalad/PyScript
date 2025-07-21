@@ -182,7 +182,8 @@ public class OpenBrowser {
 
         JavascriptExecutor js = (JavascriptExecutor) driver;
         int commentedCount = 0; // 已评论的帖子数
-        int maxComments = 0; // 最多评论5个帖子
+        int maxComments = Integer.parseInt(data.getSendData().getConfigDatas().getHome_HomeBrowseCount());
+//        int maxComments = 0; // 最多评论5个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 15; // 最多滚动15次
 
@@ -272,8 +273,8 @@ public class OpenBrowser {
         try {
             String commentInputSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div.xb88tzc.xw2csxc.x1odjw0f.x5fp0pe.x1qjc9v5.xjbqb8w.xjwep3j.x1t39747.x1wcsgtt.x1pczhz8.xr1yuqi.x11t971q.x4ii5y1.xvc5jky.x15h9jz8.x47corl.xh8yej3.xir0mxb.x1juhsu6 > div > article > div > div.x1qjc9v5.x972fbf.x10w94by.x1qhh985.x14e42zd.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x5wqa0o.xln7xf2.xk390pu.xdj266r.x14z9mp.xat24cr.x1lziwak.x65f84u.x1vq45kp.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1n2onr6.x11njtxf > div > div > div.x78zum5.xdt5ytf.x1q2y9iw.x1n2onr6.xh8yej3.x9f619.x1iyjqo2.x13lttk3.x1t7ytsu.xpilrb4.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1b5io7h > section.x5ur3kl.x13fuv20.x178xt8z.x1roi4f4.x2lah0s.xvs91rp.xl56j7k.x17ydfre.x1n2onr6.x10b6aqq.x1yrsyyn.x1hrcb2b.xv54qhq > div > form > div > textarea";
             WebElement commentInput = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(commentInputSelector)));
-            String commentText = comments[commentedCount % comments.length];
-            //输入评论
+            //随机选择一个评论内容
+            String commentText = comments[new Random().nextInt(comments.length)];
             commentInput.sendKeys(commentText);
             Thread.sleep(1000);
 
@@ -294,7 +295,12 @@ public class OpenBrowser {
      * 进入个人首页
      */
     private void goToProfilePage(WebDriver driver, JavascriptExecutor js) {
-        ProfilePage profilePage = httpRequest.getProfilePage(3, 2);
+        List<Data.UserInFIdList> userInFIdList = data.getUserInFIdList();
+
+        Data.UserInFIdList userInFI = userInFIdList.get(0);
+        Integer id = Integer.parseInt(userInFI.getId());
+        Integer count = Integer.parseInt(userInFI.getCount());
+        ProfilePage profilePage = httpRequest.getProfilePage(count, id);
 
         if (profilePage != null) {
             String[] MsgText = this.data.getSendData().getMsgText().split("\\n\\n\\n");
@@ -334,7 +340,7 @@ public class OpenBrowser {
 
                     //输入框框添加内容
                     WebElement messageInput = wait.until(ExpectedConditions.presenceOfElementLocated(
-                        By.cssSelector("div[aria-describedby='发消息'][aria-label='发消息'][contenteditable='true'][role='textbox']")));
+                            By.cssSelector("div[aria-describedby='发消息'][aria-label='发消息'][contenteditable='true'][role='textbox']")));
                     //从MsgText数组中随机获取一条消息
                     String msgText = MsgText[new Random().nextInt(MsgText.length)];
                     messageInput.click();
@@ -343,7 +349,7 @@ public class OpenBrowser {
 
                     //点击发送按钮
                     WebElement sendButton = wait.until(ExpectedConditions.elementToBeClickable(
-                        By.xpath("//div[text()='Send']")));
+                            By.xpath("//div[text()='Send']")));
                     sendButton.click();
                     log.info("已发送私信给用户: {}", userName);
                     Thread.sleep(2000); //等待发送完成

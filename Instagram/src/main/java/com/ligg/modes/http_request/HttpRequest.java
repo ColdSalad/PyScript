@@ -19,6 +19,7 @@ public class HttpRequest {
     private static final Logger log = LoggerFactory.getLogger(OpenBrowser.class);
 
     private static final String API_URL = "http://aj.ry188.vip";
+    private static final String IG_API_URL = "https://ig.ry188.vip";
 
     /**
      * 发送登录请求
@@ -45,7 +46,7 @@ public class HttpRequest {
      */
     public Data getData(String Account) {
         OkHttpClient client = new OkHttpClient();
-        String url = String.format("https://ig.ry188.vip/API/GetData.aspx?Account=%s", Account);
+        String url = String.format(IG_API_URL + "/API/GetData.aspx?Account=%s", Account);
         Request request = new Request.Builder()
                 .url(url)
                 .build();
@@ -67,7 +68,7 @@ public class HttpRequest {
      */
     public ProfilePage getProfilePage(Integer Count, Integer id) {
         OkHttpClient client = new OkHttpClient();
-        String url = String.format("https://ig.ry188.vip/API/GetUserList.aspx?Count=%s&id=%s", Count, id);
+        String url = String.format(IG_API_URL + "/API/GetUserList.aspx?Count=%s&id=%s", Count, id);
         Request request = new Request.Builder()
                 .url(url)
                 .build();
