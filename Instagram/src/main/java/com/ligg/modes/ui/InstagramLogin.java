@@ -76,51 +76,30 @@ public class InstagramLogin extends Application {
                 return;
             }
 
-            // 在UI线程中更新按钮状态
-            Platform.runLater(() -> {
-                loginButton.setText("验证中...");
-                loginButton.setDisable(true);
-            });
+            loginButton.setText("验证中...");
+            loginButton.setDisable(true);
 
-            // 在后台线程中执行网络请求，避免阻塞UI线程
-            new Thread(() -> {
-                try {
-                    String response = httpRequest.login(username, password);
-                    
-                    // 在UI线程中处理响应结果
-                    Platform.runLater(() -> {
-                        if (response == null || response.contains("ok") || response.contains("no")) {
-                            Alert alert = new Alert(Alert.AlertType.WARNING);
-                            alert.setTitle("提示");
-                            alert.setHeaderText(response);
-                            alert.showAndWait();
-                            
-                            // 恢复按钮状态
-                            loginButton.setText("后台登录");
-                            loginButton.setDisable(false);
-                        } else {
-                            // 登录成功，关闭当前窗口并打开Instagram登录界面
-                            stage.close();
-                            
-                            // 创建新的Stage用于Instagram登录界面
-                            Stage instagramStage = new Stage();
-                            LoginUi.createInstagramLoginUI(instagramStage, username);
-                        }
-                    });
-                } catch (Exception e) {
-                    // 在UI线程中处理异常
-                    Platform.runLater(() -> {
-                        Alert alert = new Alert(Alert.AlertType.ERROR);
-                        alert.setTitle("错误");
-                        alert.setHeaderText("网络请求失败: " + e.getMessage());
-                        alert.showAndWait();
-                        
-                        // 恢复按钮状态
-                        loginButton.setText("后台登录");
-                        loginButton.setDisable(false);
-                    });
-                }
-            }).start();
+            String response = httpRequest.login(username, password);
+            if (response == null || response.contains("ok") || response.contains("no")) {
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("提示");
+                    alert.setHeaderText(response);
+                    alert.showAndWait();
+                });
+                loginButton.setText("后台登录");
+                loginButton.setDisable(false);
+                return;
+            }
+
+            // 登录成功，关闭当前窗口并打开Instagram登录界面
+            stage.close();
+
+            // 创建新的Stage用于Instagram登录界面
+            Platform.runLater(() -> {
+                Stage instagramStage = new Stage();
+                LoginUi.createInstagramLoginUI(instagramStage,username);
+            });
         });
 
         //将所有元素添加到根容器
