@@ -3,12 +3,12 @@ package com.ligg.modes.automation;
 import com.ligg.modes.http_request.HttpRequest;
 import com.ligg.modes.pojo.Data;
 import com.ligg.modes.pojo.ProfilePage;
+import com.ligg.modes.util.CookieUtil;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import org.jetbrains.annotations.NotNull;
 import org.openqa.selenium.*;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.Map;
 
 
 /**
@@ -43,17 +44,15 @@ public class OpenBrowser {
         new Thread(() -> {
             try {
                 log.info("尝试启动Chrome浏览器...");
-                EdgeOptions edgeOptions = new EdgeOptions();
-                edgeOptions.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-                driver = new EdgeDriver(edgeOptions);
-
-            } catch (Exception e) {
-                //默认启动Edge浏览器
-                log.info("Chrome启动失败，尝试启动Edge浏览器...");
                 ChromeOptions chromeOptions = new ChromeOptions();
                 chromeOptions.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
                 driver = new ChromeDriver(chromeOptions);
-
+            } catch (Exception e) {
+                //默认启动Edge浏览器
+                log.info("Chrome启动失败，尝试启动Edge浏览器...");
+                EdgeOptions edgeOptions = new EdgeOptions();
+                edgeOptions.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                driver = new EdgeDriver(edgeOptions);
             }
             driver.get("https://www.instagram.com/?next=%2F");
             try {
@@ -155,7 +154,7 @@ public class OpenBrowser {
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 10; // 最多滚动次
         String HuDong_IsEnableMsg = configDatas.getHuDong_IsEnableMsg(); //是否私信
-        String Home_IsEnableLeave = configDatas.getHome_IsEnableLeave(); //是评论
+
         //点赞
         if (Objects.equals(Home_IsEnableLike, "true")) {
             try {
@@ -200,10 +199,9 @@ public class OpenBrowser {
                 log.error("点赞过程中发生异常：{}", e.getMessage());
             }
         }
-        if (Objects.equals(Home_IsEnableLeave, "true")) {
-            //评论
-            comment(driver, loginButton);
-        }
+
+        //评论
+        comment(driver, loginButton);
 
         //私信
         if (Objects.equals(HuDong_IsEnableMsg, "true")) {
@@ -233,44 +231,29 @@ public class OpenBrowser {
     public void comment(WebDriver driver, Button loginButton) {
         log.info("开始自动评论...");
         Platform.runLater(() -> loginButton.setText("评论中..."));
-        Data.ConfigDatas configDatas = data.getSendData().getConfigDatas();
+
         JavascriptExecutor js = (JavascriptExecutor) driver;
         int commentedCount = 0; // 已评论的帖子数
-        int maxComments = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多评论5个帖子
+        int maxComments = 1; // 最多评论5个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 15; // 最多滚动15次
-        long currentScrollPosition = 0; // 记录当前滚动位置
 
         try {
             while (commentedCount < maxComments && scrollAttempts < maxScrollAttempts) {
-                // 获取当前页面的滚动位置
-                currentScrollPosition = ((Number) js.executeScript("return window.pageYOffset;")).longValue();
-
                 List<WebElement> commentButtons = driver.findElements(By.cssSelector("svg[aria-label='评论'],svg[aria-label='Comment']"));
-                boolean foundValidPost = false;
 
                 for (WebElement svgElement : commentButtons) {
-                    // 检查元素是否在当前可视区域内或稍微下方
-                    Number elementTopNum = (Number) js.executeScript("return arguments[0].getBoundingClientRect().top;", svgElement);
-                    if (elementTopNum != null) {
-                        double elementTop = elementTopNum.doubleValue();
-                        if (elementTop >= -100 && elementTop <= 1000) { // 在可视区域内或稍微下方
-                            if (commentOnPost(svgElement, driver, js, commentedCount, currentScrollPosition)) {
-                                commentedCount++;
-                                foundValidPost = true;
-                                if (commentedCount >= maxComments) {
-                                    break;
-                                }
-                            }
+                    if (commentOnPost(svgElement, driver, js, commentedCount)) {
+                        commentedCount++;
+                        if (commentedCount >= maxComments) {
+                            break;
                         }
                     }
                 }
 
-                // 如果还没达到目标数量，继续滚动页面
                 if (commentedCount < maxComments) {
                     log.info("滚动页面加载更多帖子...");
-                    // 确保页面向下滚动
-                    js.executeScript("window.scrollTo(0, " + (currentScrollPosition + 700) + ");");
+                    js.executeScript("window.scrollBy(0, 800);");
                     Thread.sleep(3000);
                     scrollAttempts++;
                 }
@@ -288,21 +271,13 @@ public class OpenBrowser {
     /**
      * 评论单个帖子
      */
-    private boolean commentOnPost(WebElement svgElement, WebDriver driver, JavascriptExecutor js, int commentedCount, long currentScrollPosition) {
+    private boolean commentOnPost(WebElement svgElement, WebDriver driver, JavascriptExecutor js, int commentedCount) {
         try {
             if (!svgElement.isDisplayed()) {
                 return false;
             }
 
-            // 不使用scrollIntoView，避免页面跳转，只确保元素可见
-            Number elementTopNum = (Number) js.executeScript("return arguments[0].getBoundingClientRect().top;", svgElement);
-            if (elementTopNum != null) {
-                double elementTop = elementTopNum.doubleValue();
-                if (elementTop < 0 || elementTop > 800) {
-                    // 如果元素不在合适的可视区域，轻微调整滚动位置
-                    js.executeScript("window.scrollTo(0, " + (currentScrollPosition + (long) elementTop - 400) + ");");
-                }
-            }
+            js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", svgElement);
             Thread.sleep(1000);
 
             WebElement clickableParent = findClickableParent(svgElement, js);
@@ -331,28 +306,14 @@ public class OpenBrowser {
             }
 
             // 检测是否限制评论
-            try {
-                WebElement restrictedComment = driver.findElement(By.xpath("//span[normalize-space()='这篇帖子限制评论了。']"));
-                if (restrictedComment != null && restrictedComment.isDisplayed()) {
-                    log.warn("检测到帖子限制评论，跳过该帖子");
-                    // 记录关闭评论框前的滚动位置
-                    long scrollPositionBeforeClose = ((Number) js.executeScript("return window.pageYOffset;")).longValue();
-                    closeCommentBox(js);
-                    // 恢复滚动位置，确保页面不跳转
-                    js.executeScript("window.scrollTo(0, " + scrollPositionBeforeClose + ");");
-                    Thread.sleep(500); // 等待页面稳定
-                    return false;
-                }
-            } catch (NoSuchElementException e) {
-                // 没有找到限制评论的提示，继续正常流程
+            WebElement restrictedComment = driver.findElement(By.xpath("//span[normalize-space()='这篇帖子限制评论了。']"));
+            if (restrictedComment != null && restrictedComment.isDisplayed()) {
+                log.warn("检测到帖子限制评论，跳过该帖子");
+                closeCommentBox(js);
+                return false;
             }
             boolean success = submitComment(driver, js, commentedCount);
-            // 记录关闭评论框前的滚动位置
-            long scrollPositionBeforeClose = ((Number) js.executeScript("return window.pageYOffset;")).longValue();
             closeCommentBox(js);
-            // 恢复滚动位置，确保页面不跳转
-            js.executeScript("window.scrollTo(0, " + scrollPositionBeforeClose + ");");
-            Thread.sleep(500); // 等待页面稳定
 
             return success;
         } catch (Exception e) {
@@ -393,26 +354,8 @@ public class OpenBrowser {
      * 进入个人首页
      */
     private void goToProfilePage(WebDriver driver, JavascriptExecutor js) {
-        Data.ConfigDatas configDatas = data.getSendData().getConfigDatas();
+        ProfilePage profilePage = httpRequest.getProfilePage(2, 2);
 
-        List<Data.UserInFIdList> userInFIdList = data.getUserInFIdList();
-        // 从UserInFIdList数组中获取第一个元素的Id和Count
-        if (userInFIdList != null && !userInFIdList.isEmpty()) {
-            Data.UserInFIdList firstItem = userInFIdList.get(0);
-            Integer id = Integer.valueOf(firstItem.getId()); //成员分类
-            Integer Count = Integer.valueOf(firstItem.getCount()); //帖子数量
-            
-            ProfilePage profilePage = httpRequest.getProfilePage(Count, id);
-            processProfilePage(profilePage, driver, js);
-        } else {
-            log.warn("UserInFIdList为空，无法获取用户列表");
-        }
-    }
-    
-    /**
-     * 处理ProfilePage数据
-     */
-    private void processProfilePage(ProfilePage profilePage, WebDriver driver, JavascriptExecutor js) {
         if (profilePage != null) {
             String[] MsgText = this.data.getSendData().getMsgText().split("\\n\\n\\n");
             for (ProfilePage.User user : profilePage.getUserList()) {
@@ -440,16 +383,10 @@ public class OpenBrowser {
                     message.click();
 
                     //检查是否有消息通知弹窗
-                    try {
-                        WebElement messageNotify = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//h2[normalize-space()='打开通知']")));
-                        if (messageNotify != null && messageNotify.isDisplayed()) {
-                            WebElement closeButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[normalize-space()='以后再说']")));
-                            closeButton.click();
-                            log.info("检测到消息通知弹窗，已关闭");
-                        }
-                    } catch (org.openqa.selenium.TimeoutException e) {
-                        // 没有找到消息通知弹窗，继续正常流程
-                        log.debug("未检测到消息通知弹窗，继续正常流程");
+                    WebElement messageNotify = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div.x7r02ix.x15fl9t6.x1yw9sn2.x1evh3fb.x4giqqa.xb88tzc.xw2csxc.x1odjw0f.x5fp0pe > div")));
+                    if (messageNotify != null) {
+                        WebElement closeButton = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div.x7r02ix.x15fl9t6.x1yw9sn2.x1evh3fb.x4giqqa.xb88tzc.xw2csxc.x1odjw0f.x5fp0pe > div > div > div._a9-z > button._a9--._ap36._a9_1")));
+                        closeButton.click();
                     }
                     WebElement messageP = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div > div > div > div.x9f619.x1n2onr6.x1ja2u2z > div > div > div.x78zum5.xdt5ytf.x1t2pt76.x1n2onr6.x1ja2u2z.x10cihs4 > div.html-div.xdj266r.x14z9mp.xat24cr.x1lziwak.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x9f619.x1f5funs.xvbhtw8.x78zum5.x15mokao.x1ga7v0g.x16uus16.xbiv7yw.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.x1q0g3np.xqjyukv.x1qjc9v5.x1oa3qoh.x1qughib > div.xvc5jky.xh8yej3.x10o80wk.x14k21rp.x1v4esvl.x8vgawa > section > main > section > div > div > div > div.xjp7ctv > div > div.x9f619.x1n2onr6.x1ja2u2z.x78zum5.xdt5ytf.x193iq5w.xeuugli.x1r8uery.x1iyjqo2.xs83m0k > div > div.html-div.xdj266r.x14z9mp.xat24cr.x1lziwak.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x9f619.x78zum5.x15mokao.x1ga7v0g.x16uus16.xbiv7yw.x1iyjqo2.x2lwn1j.xeuugli.x1q0g3np.xqjyukv.x1qjc9v5.x1oa3qoh.x1nhvcw1.xcrg951.x6prxxf.x6ikm8r.x10wlt62.x1n2onr6.xh8yej3 > div > div.x78zum5.xdt5ytf.x1iyjqo2.x193iq5w.x2lwn1j.x1n2onr6 > div:nth-child(2) > div > div > div > div > div.html-div.xat24cr.xexx8yu.xyri2b.x1c1uobl.x9f619.xjbqb8w.x78zum5.x15mokao.x1ga7v0g.x16uus16.xbiv7yw.x1xmf6yo.x13fj5qh.x2fvf9.x1uhb9sk.x1plvlek.xryxfnj.x1iyjqo2.x2lwn1j.xeuugli.xdt5ytf.xqjyukv.x1qjc9v5.x1oa3qoh.x1nhvcw1.xs9asl8 > div > div.xzsf02u.x1a2a7pz.x1n2onr6.x14wi4xw.x1iyjqo2.x1gh3ibb.xisnujt.xeuugli.x1odjw0f.notranslate > p")));
                     //从MsgText数组中随机获取一条数据
@@ -463,8 +400,6 @@ public class OpenBrowser {
                     log.warn("进入用户主页失败: {}", e.getMessage());
                 }
             }
-        } else {
-            log.warn("获取ProfilePage失败，无法进行私信操作");
         }
     }
 
