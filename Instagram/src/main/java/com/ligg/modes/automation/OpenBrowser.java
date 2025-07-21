@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 
 
 /**
@@ -92,7 +93,8 @@ public class OpenBrowser {
         Data.ConfigDatas configDatas = data.getSendData().getConfigDatas();
         String Home_IsEnableLike = configDatas.getHome_IsEnableLike();
         int likedCount = 0; // 已点赞的帖子数
-        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
+//        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
+        int maxLikes = 0; // 最多点赞10个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 10; // 最多滚动次
         String HuDong_IsEnableMsg = configDatas.getHuDong_IsEnableMsg(); //是否私信
@@ -180,7 +182,7 @@ public class OpenBrowser {
 
         JavascriptExecutor js = (JavascriptExecutor) driver;
         int commentedCount = 0; // 已评论的帖子数
-        int maxComments = 1; // 最多评论5个帖子
+        int maxComments = 0; // 最多评论5个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 15; // 最多滚动15次
 
@@ -319,6 +321,33 @@ public class OpenBrowser {
                     String messageSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div > button:nth-child(6)";
                     WebElement message = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(messageSelector)));
                     message.click();
+
+                    //判断是否有通知弹窗
+                    try {
+                        WebElement textarea = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//h2[text()='打开通知']")));
+                        if (textarea.isDisplayed()) {
+                            wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[text()='以后再说']"))).click();
+                        }
+                    } catch (Exception e) {
+                        log.warn("没有通知弹窗");
+                    }
+
+                    //输入框框添加内容
+                    WebElement messageInput = wait.until(ExpectedConditions.presenceOfElementLocated(
+                        By.cssSelector("div[aria-describedby='发消息'][aria-label='发消息'][contenteditable='true'][role='textbox']")));
+                    //从MsgText数组中随机获取一条消息
+                    String msgText = MsgText[new Random().nextInt(MsgText.length)];
+                    messageInput.click();
+                    messageInput.sendKeys(msgText);
+                    log.info("已输入私信内容: {}", msgText);
+
+                    //点击发送按钮
+                    WebElement sendButton = wait.until(ExpectedConditions.elementToBeClickable(
+                        By.xpath("//div[text()='Send']")));
+                    sendButton.click();
+                    log.info("已发送私信给用户: {}", userName);
+                    Thread.sleep(2000); //等待发送完成
+
                 } catch (Exception e) {
                     log.warn("进入用户主页失败: {}", e.getMessage());
                 }
