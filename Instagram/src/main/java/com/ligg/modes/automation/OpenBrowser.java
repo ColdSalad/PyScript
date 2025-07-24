@@ -4,7 +4,9 @@ import com.ligg.modes.http_request.HttpRequest;
 import com.ligg.modes.pojo.Data;
 import com.ligg.modes.pojo.ProfilePage;
 import javafx.application.Platform;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -93,8 +95,8 @@ public class OpenBrowser {
         Data.ConfigDatas configDatas = data.getSendData().getConfigDatas();
         String Home_IsEnableLike = configDatas.getHome_IsEnableLike();
         int likedCount = 0; // 已点赞的帖子数
-//        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
-        int maxLikes = 0; // 最多点赞10个帖子
+        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
+//        int maxLikes = 2; // 最多点赞10个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 10; // 最多滚动次
         String HuDong_IsEnableMsg = configDatas.getHuDong_IsEnableMsg(); //是否私信
@@ -139,10 +141,7 @@ public class OpenBrowser {
                 }
 
                 log.info("点赞完成，共点赞{}个帖子", likedCount);
-            /*
-             开始评论
-             */
-                comment(driver, loginButton);
+
             } catch (InterruptedException e) {
                 log.error("点赞过程中发生异常：{}", e.getMessage());
             }
@@ -155,6 +154,29 @@ public class OpenBrowser {
         if (Objects.equals(HuDong_IsEnableMsg, "true")) {
             goToProfilePage(driver, js);
         }
+
+        //结束后弹窗通知是否关闭浏览器
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("操作完成");
+            alert.setHeaderText("自动化操作已完成");
+            alert.setContentText("是否需要关闭浏览器?");
+
+            ButtonType closeBrowser = new ButtonType("关闭浏览器");
+            ButtonType keepBrowser = new ButtonType("保持打开");
+
+            alert.getButtonTypes().setAll(closeBrowser, keepBrowser);
+
+            alert.showAndWait().ifPresent(buttonType -> {
+                if (buttonType == closeBrowser) {
+                    if (driver != null) {
+                        driver.quit();
+                    }
+                } else {
+                    updateButtonState(loginButton, "已完成");
+                }
+            });
+        });
     }
 
     /**
@@ -183,7 +205,7 @@ public class OpenBrowser {
         JavascriptExecutor js = (JavascriptExecutor) driver;
         int commentedCount = 0; // 已评论的帖子数
         int maxComments = Integer.parseInt(data.getSendData().getConfigDatas().getHome_HomeBrowseCount());
-//        int maxComments = 0; // 最多评论5个帖子
+//        int maxComments = 2; // 最多评论5个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 15; // 最多滚动15次
 
