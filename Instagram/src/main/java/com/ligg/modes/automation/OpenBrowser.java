@@ -95,11 +95,10 @@ public class OpenBrowser {
         Data.ConfigDatas configDatas = data.getSendData().getConfigDatas();
         String Home_IsEnableLike = configDatas.getHome_IsEnableLike();
         int likedCount = 0; // 已点赞的帖子数
-        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
-//        int maxLikes = 2; // 最多点赞10个帖子
+//        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
+        int maxLikes = 0; // 最多点赞10个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 10; // 最多滚动次
-        String HuDong_IsEnableMsg = configDatas.getHuDong_IsEnableMsg(); //是否私信
 
         //点赞
         if (Objects.equals(Home_IsEnableLike, "true")) {
@@ -148,11 +147,17 @@ public class OpenBrowser {
         }
 
         //评论
-        comment(driver, loginButton);
+        if (Objects.equals(configDatas.getHome_IsEnableLeave(), "true")) {
+            comment(driver, loginButton);
+        }
 
         //私信
-        if (Objects.equals(HuDong_IsEnableMsg, "true")) {
+        if (Objects.equals(configDatas.getHuDong_IsEnableMsg(), "true")) {
             goToProfilePage(driver, js);
+        }
+
+        if (Objects.equals(configDatas.getKey_IsEnableKey(), "true")) {
+            search(driver);
         }
 
         //结束后弹窗通知是否关闭浏览器
@@ -204,8 +209,8 @@ public class OpenBrowser {
 
         JavascriptExecutor js = (JavascriptExecutor) driver;
         int commentedCount = 0; // 已评论的帖子数
-        int maxComments = Integer.parseInt(data.getSendData().getConfigDatas().getHome_HomeBrowseCount());
-//        int maxComments = 2; // 最多评论5个帖子
+//        int maxComments = Integer.parseInt(data.getSendData().getConfigDatas().getHome_HomeBrowseCount());
+        int maxComments = 0; // 最多点赞x个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 15; // 最多滚动15次
 
@@ -322,7 +327,7 @@ public class OpenBrowser {
         Data.UserInFIdList userInFI = userInFIdList.get(0);
         Integer id = Integer.parseInt(userInFI.getId());
         Integer count = Integer.parseInt(userInFI.getCount());
-        ProfilePage profilePage = httpRequest.getProfilePage(count, id);
+        ProfilePage profilePage = httpRequest.getProfilePage(0, id);
 
         if (profilePage != null) {
             String[] MsgText = this.data.getSendData().getMsgText().split("\\n\\n\\n");
@@ -382,6 +387,58 @@ public class OpenBrowser {
             }
         }
     }
+
+    /**
+     * 关键字搜索
+     */
+    private void search(WebDriver driver) {
+
+        String instagram = "https://www.instagram.com";
+        driver.get(instagram + "/?next=%2F");
+
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+        try {
+
+            //点击搜索按钮
+            WebElement searchSvg = wait.until(ExpectedConditions.presenceOfElementLocated(
+                    By.cssSelector("svg[aria-label='搜索']")
+            ));
+            searchSvg.click();
+
+            Thread.sleep(2000);
+
+            //搜索框中输入关键字
+            WebElement searchInput = wait.until(ExpectedConditions.presenceOfElementLocated(
+                    By.cssSelector("input[aria-label='搜索输入']")
+            ));
+            searchInput.sendKeys(this.data.getSendData().getConfigDatas().getKeys());
+            log.info("已输入搜索关键字: {}", this.data.getSendData().getConfigDatas().getKeys());
+            Thread.sleep(2000);
+
+            //获取搜索条目集合
+            List<WebElement> searchItems = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(
+                    By.cssSelector("div > div > div.x9f619.x1ja2u2z.x78zum5.x1n2onr6.x1iyjqo2.xs83m0k.xeuugli.x1qughib.x6s0dn4.x1a02dak.x1q0g3np.xdl72j9 > div > div > div > span")
+            ));
+            //创建一个String数组，用于存储搜索条目
+            String[] searchItemTexts = new String[searchItems.size()];
+            //遍历搜索条目集合，将每个条目的文本存储到String数组中
+            for (int i = 0; i < searchItems.size(); i++) {
+                searchItemTexts[i] = searchItems.get(i).getText();
+            }
+
+            //遍历搜索条目，打开每个条目的页面
+            for (int i = 0; i < searchItemTexts.length; i++) {
+                driver.get(instagram + "/" +  searchItemTexts[i]);
+                Thread.sleep(2000);
+
+            }
+
+        } catch (Exception e) {
+            log.warn("关键词操作失败: {}", e.getMessage());
+        }
+    }
+
 
     /**
      * 关闭评论弹窗
