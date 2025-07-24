@@ -428,10 +428,11 @@ public class OpenBrowser {
             }
 
             //遍历搜索条目，打开每个条目的页面
-            for (int i = 0; i < searchItemTexts.length; i++) {
-                driver.get(instagram + "/" +  searchItemTexts[i]);
+            for (String searchItemText : searchItemTexts) {
+                driver.get(instagram + "/" + searchItemText);
                 Thread.sleep(2000);
 
+                //TODO 私信功能
             }
 
         } catch (Exception e) {
