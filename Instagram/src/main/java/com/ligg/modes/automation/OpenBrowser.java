@@ -3,6 +3,8 @@ package com.ligg.modes.automation;
 import com.ligg.modes.http_request.HttpRequest;
 import com.ligg.modes.pojo.Data;
 import com.ligg.modes.pojo.ProfilePage;
+import com.ligg.modes.service.PrivateMessage;
+import com.ligg.modes.service.impl.PrivateMessageImpl;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -32,7 +34,7 @@ public class OpenBrowser {
 
     private static final Logger log = LoggerFactory.getLogger(OpenBrowser.class);
     private WebDriver driver;
-
+    private static final PrivateMessage privateMessage = new PrivateMessageImpl();
     private static final HttpRequest httpRequest = new HttpRequest();
     private String adminUsername;
 
@@ -340,47 +342,12 @@ public class OpenBrowser {
                     String instagraminfId = user.getInstagraminf_id();
                     String createdAt = user.getCreated_at();
                     int types = user.getTypes();
+                    String instagramURL = "https://www.instagram.com/";
+                    String msgText = MsgText[new Random().nextInt(MsgText.length)];//从MsgText数组中随机获取一条消息
 
-                    driver.get("https://www.instagram.com/" + userName);
-                    log.info("进入用户主页: {}", userName);
-                    //打开弹窗点击私信按钮
-                    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-                    // 更多按钮
-                    String moreSelector = "svg[aria-label='选项']";
-                    WebElement more = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(moreSelector)));
-                    more.click();
-
-                    Thread.sleep(1000);
-                    String messageSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div > button:nth-child(6)";
-                    WebElement message = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(messageSelector)));
-                    message.click();
-
-                    //判断是否有通知弹窗
-                    try {
-                        WebElement textarea = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//h2[text()='打开通知']")));
-                        if (textarea.isDisplayed()) {
-                            wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[text()='以后再说']"))).click();
-                        }
-                    } catch (Exception e) {
-                        log.warn("没有通知弹窗");
-                    }
-
-                    //输入框框添加内容
-                    WebElement messageInput = wait.until(ExpectedConditions.presenceOfElementLocated(
-                            By.cssSelector("div[aria-describedby='发消息'][aria-label='发消息'][contenteditable='true'][role='textbox']")));
-                    //从MsgText数组中随机获取一条消息
-                    String msgText = MsgText[new Random().nextInt(MsgText.length)];
-                    messageInput.click();
-                    messageInput.sendKeys(msgText);
-                    log.info("已输入私信内容: {}", msgText);
-
-                    //点击发送按钮
-                    WebElement sendButton = wait.until(ExpectedConditions.elementToBeClickable(
-                            By.xpath("//div[text()='Send']")));
-                    sendButton.click();
-                    log.info("已发送私信给用户: {}", userName);
+                    //发送私信
+                    privateMessage.sendPrivateMessage(driver,instagramURL,userName,msgText);
                     Thread.sleep(2000); //等待发送完成
-
                 } catch (Exception e) {
                     log.warn("进入用户主页失败: {}", e.getMessage());
                 }
@@ -395,7 +362,7 @@ public class OpenBrowser {
 
         String instagram = "https://www.instagram.com";
         driver.get(instagram + "/?next=%2F");
-
+        String[] MsgText = this.data.getSendData().getMsgText().split("\\n\\n\\n");
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
         try {
@@ -431,8 +398,10 @@ public class OpenBrowser {
             for (String searchItemText : searchItemTexts) {
                 driver.get(instagram + "/" + searchItemText);
                 Thread.sleep(2000);
-
-                //TODO 私信功能
+                String msgText = MsgText[new Random().nextInt(MsgText.length)];
+                // 发送私信
+                privateMessage.sendPrivateMessage(driver,instagram,searchItemText,msgText);
+                Thread.sleep(2000);
             }
 
         } catch (Exception e) {
