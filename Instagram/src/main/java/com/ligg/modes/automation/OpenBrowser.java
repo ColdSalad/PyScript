@@ -53,6 +53,8 @@ public class OpenBrowser {
                 log.info("Edge启动失败，尝试启动Chrome浏览器...");
                 driver = new ChromeDriver();
             }
+
+
             driver.get("https://www.instagram.com/");
             // 自动登录逻辑
             try {

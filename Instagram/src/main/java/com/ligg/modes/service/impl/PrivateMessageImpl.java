@@ -33,7 +33,7 @@ public class PrivateMessageImpl implements PrivateMessage {
         //打开弹窗点击私信按钮
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
 
-        //先判断是否又发送信息按钮可以直接点击
+        //先判断是否有发送信息按钮可以直接点击
         try {
             WebElement sendButton = wait.until(ExpectedConditions.elementToBeClickable(
                     By.cssSelector("  div.html-div.xdj266r.x14z9mp.xat24cr.x1lziwak.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x9f619.xjbqb8w.x78zum5.x15mokao.x1ga7v0g.x16uus16.xbiv7yw.x1n2onr6.x6ikm8r.x10wlt62.x1iyjqo2.x2lwn1j.xeuugli.xdt5ytf.xqjyukv.x1qjc9v5.x1oa3qoh.x1nhvcw1 > div")
