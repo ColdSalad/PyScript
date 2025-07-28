@@ -61,8 +61,12 @@ public class OpenBrowser {
 
             try {
                 Thread.sleep(2000);
-                // 添加cookies
-                cookieService.addInstagramCookies(driver);
+                log.info("开始添加 Instagram cookies...");
+
+                // 首先尝试从 JSON 文件加载 cookies
+                cookieService.loadCookiesFromJson(driver);
+
+                cookieService.getCookieValue(driver, "sessionid");
 
                 driver.navigate().refresh(); // 刷新页面使 cookies 生效
                 Thread.sleep(3000);
@@ -75,11 +79,13 @@ public class OpenBrowser {
                 Thread.sleep(5000);
 
                 // 检查是否已经登录（通过检测登录表单是否存在）
+                boolean needLogin = false;
                 try {
-                    // 尝试查找登录表单，如果找不到说明已经登录
+                    // 尝试查找登录表单，如果找到说明需要登录
                     WebElement loginForm = driver.findElement(By.xpath("//*[@id=\"loginForm\"]"));
                     log.info("检测到登录表单，需要手动登录");
-
+                    needLogin = true;
+                    cookieService.deleteAllCookies(driver);
                     //选中账号、密码输入框
                     WebElement usernameInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[1]/div/label/input"));
                     WebElement passwordInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[2]/div/label/input"));
@@ -91,18 +97,52 @@ public class OpenBrowser {
                         WebElement webLoginButton = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[3]/button"));
                         webLoginButton.click();
                         Thread.sleep(5000);
+
+                        // 手动登录成功后，获取并保存 sessionid cookie
+                        log.info("手动登录成功，开始获取 sessionid cookie...");
+                        String sessionId = cookieService.getCookieValue(driver, "sessionid");
+                        if (sessionId != null) {
+                            log.info("成功获取 sessionid: {}", sessionId);
+                            // 保存所有 cookies 到 JSON 文件
+                            cookieService.saveCookiesToJson(driver);
+                        } else {
+                            log.warn("未能获取到 sessionid cookie");
+                        }
                     }
                 } catch (org.openqa.selenium.NoSuchElementException e) {
                     // 找不到登录表单，说明已经通过 cookie 登录
                     log.info("未检测到登录表单，已通过 cookie 完成登录");
+                    needLogin = false;
                 }
 
+                // 根据登录状态决定后续操作
+                if (needLogin) {
+                    // 如果进行了手动登录，需要等待并导航到主页
+                    Thread.sleep(5000);
+                    String currentUrl = driver.getCurrentUrl();
+                    log.info("登录后当前 URL: {}", currentUrl);
 
-                Thread.sleep(5000);
-                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-                var homeButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(1) > div > span > div > a > div")));
-                homeButton.click();
-                //点赞
+                    // 如果不在主页，尝试点击主页按钮
+                    if (!currentUrl.equals("https://www.instagram.com/?next=%2F")) {
+                        try {
+                            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+                            var homeButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(1) > div > span > div > a > div")));
+                            homeButton.click();
+                            Thread.sleep(3000);
+                        } catch (Exception e) {
+                            log.warn("无法找到主页按钮，直接导航到主页");
+                            driver.get("https://www.instagram.com/");
+                            Thread.sleep(3000);
+                        }
+                    }
+                } else {
+                    // 如果通过 cookie 登录，直接等待页面稳定
+                    Thread.sleep(3000);
+                    log.info("Cookie 登录成功，页面已准备就绪");
+                }
+
+                //开始自动化操作
+                log.info("开始执行自动化操作");
                 like(driver, loginButton);
 
             } catch (InterruptedException e) {
