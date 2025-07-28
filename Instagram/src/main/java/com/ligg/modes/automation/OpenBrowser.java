@@ -69,6 +69,7 @@ public class OpenBrowser {
                 cookieService.getCookieValue(driver, "sessionid");
 
                 driver.navigate().refresh(); // 刷新页面使 cookies 生效
+                //TODO 如果无法进入首页说明Cookie过期，需要删除 instagram_cookies.json文件 重新获取
                 Thread.sleep(3000);
             } catch (Exception e) {
                 log.warn("添加 cookies 失败: {}", e.getMessage());
