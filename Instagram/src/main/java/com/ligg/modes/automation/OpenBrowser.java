@@ -59,43 +59,56 @@ public class OpenBrowser {
 
             driver.get("https://www.instagram.com/");
 
-            // 添加 cookies（在页面加载后，自动登录前）
             try {
-                Thread.sleep(2000); // 等待页面初始加载
-                // 使用 CookieService 添加 Instagram cookies
+                Thread.sleep(2000);
+                // 添加cookies
                 cookieService.addInstagramCookies(driver);
 
                 driver.navigate().refresh(); // 刷新页面使 cookies 生效
-                Thread.sleep(3000); // 等待页面刷新完成
+                Thread.sleep(3000);
             } catch (Exception e) {
                 log.warn("添加 cookies 失败: {}", e.getMessage());
             }
 
-            // 自动登录逻辑
+            // 检查登录状态并处理登录逻辑
             try {
                 Thread.sleep(5000);
-                //选中账号、密码输入框
-                WebElement usernameInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[1]/div/label/input"));
-                WebElement passwordInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[2]/div/label/input"));
-                usernameInput.sendKeys(username);
-                passwordInput.sendKeys(password);
 
-                //点击登录按钮
-                WebElement webLoginButton = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[3]/button"));
-                webLoginButton.click();
+                // 检查是否已经登录（通过检测登录表单是否存在）
+                try {
+                    // 尝试查找登录表单，如果找不到说明已经登录
+                    WebElement loginForm = driver.findElement(By.xpath("//*[@id=\"loginForm\"]"));
+                    log.info("检测到登录表单，需要手动登录");
+
+                    //选中账号、密码输入框
+                    WebElement usernameInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[1]/div/label/input"));
+                    WebElement passwordInput = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[2]/div/label/input"));
+                    if (usernameInput.isDisplayed()) {
+                        log.info("已找到用户名输入框，开始填入登录信息");
+                        usernameInput.sendKeys(username);
+                        passwordInput.sendKeys(password);
+                        //点击登录按钮
+                        WebElement webLoginButton = driver.findElement(By.xpath("//*[@id=\"loginForm\"]/div[1]/div[3]/button"));
+                        webLoginButton.click();
+                        Thread.sleep(5000);
+                    }
+                } catch (org.openqa.selenium.NoSuchElementException e) {
+                    // 找不到登录表单，说明已经通过 cookie 登录
+                    log.info("未检测到登录表单，已通过 cookie 完成登录");
+                }
 
 
                 Thread.sleep(5000);
-                if (!driver.getCurrentUrl().equals("https://www.instagram.com/?next=%2F")) {
-                    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-                    var homeButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(1) > div > span > div > a > div")));
-                    homeButton.click();
+                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+                var homeButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(1) > div > span > div > a > div")));
+                homeButton.click();
+                //点赞
+                like(driver, loginButton);
 
-                    //点赞
-                    like(driver, loginButton);
-                }
             } catch (InterruptedException e) {
-                log.error("网页加载超时");
+                log.error("网页加载超时: {}", e.getMessage());
+            } catch (Exception e) {
+                log.error("登录过程中发生异常: {}", e.getMessage());
             }
         }).start();
     }
