@@ -3,7 +3,9 @@ package com.ligg.modes.automation;
 import com.ligg.modes.http_request.HttpRequest;
 import com.ligg.modes.pojo.Data;
 import com.ligg.modes.pojo.ProfilePage;
+import com.ligg.modes.service.CookieService;
 import com.ligg.modes.service.PrivateMessage;
+import com.ligg.modes.service.impl.CookieServiceImpl;
 import com.ligg.modes.service.impl.PrivateMessageImpl;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
@@ -36,10 +38,10 @@ public class OpenBrowser {
     private WebDriver driver;
     private static final PrivateMessage privateMessage = new PrivateMessageImpl();
     private static final HttpRequest httpRequest = new HttpRequest();
+    private static final CookieService cookieService = new CookieServiceImpl();
     private String adminUsername;
-
     private Data data = null;
-        //注释
+
     //打开浏览器
     public void Login(String username, String password, Button loginButton, String adminUsername) {
         this.adminUsername = adminUsername;
@@ -56,6 +58,19 @@ public class OpenBrowser {
 
 
             driver.get("https://www.instagram.com/");
+
+            // 添加 cookies（在页面加载后，自动登录前）
+            try {
+                Thread.sleep(2000); // 等待页面初始加载
+                // 使用 CookieService 添加 Instagram cookies
+                cookieService.addInstagramCookies(driver);
+
+                driver.navigate().refresh(); // 刷新页面使 cookies 生效
+                Thread.sleep(3000); // 等待页面刷新完成
+            } catch (Exception e) {
+                log.warn("添加 cookies 失败: {}", e.getMessage());
+            }
+
             // 自动登录逻辑
             try {
                 Thread.sleep(5000);
@@ -348,7 +363,7 @@ public class OpenBrowser {
                     String msgText = MsgText[new Random().nextInt(MsgText.length)];//从MsgText数组中随机获取一条消息
 
                     //发送私信
-                    privateMessage.sendPrivateMessage(driver,instagramURL,userName,msgText);
+                    privateMessage.sendPrivateMessage(driver, instagramURL, userName, msgText);
                     Thread.sleep(2000); //等待发送完成
                 } catch (Exception e) {
                     log.warn("进入用户主页失败: {}", e.getMessage());
@@ -402,7 +417,7 @@ public class OpenBrowser {
                 Thread.sleep(2000);
                 String msgText = MsgText[new Random().nextInt(MsgText.length)];
                 // 发送私信
-                privateMessage.sendPrivateMessage(driver,instagram,searchItemText,msgText);
+                privateMessage.sendPrivateMessage(driver, instagram, searchItemText, msgText);
                 Thread.sleep(2000);
             }
 
