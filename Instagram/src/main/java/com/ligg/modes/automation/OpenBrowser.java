@@ -168,8 +168,8 @@ public class OpenBrowser {
         Data.ConfigDatas configDatas = data.getSendData().getConfigDatas();
         String Home_IsEnableLike = configDatas.getHome_IsEnableLike();
         int likedCount = 0; // 已点赞的帖子数
-//        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
-        int maxLikes = 0; // 最多点赞10个帖子
+        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
+//        int maxLikes = 0; // 最多点赞10个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 10; // 最多滚动次
 
@@ -282,8 +282,8 @@ public class OpenBrowser {
 
         JavascriptExecutor js = (JavascriptExecutor) driver;
         int commentedCount = 0; // 已评论的帖子数
-//        int maxComments = Integer.parseInt(data.getSendData().getConfigDatas().getHome_HomeBrowseCount());
-        int maxComments = 0; // 最多点赞x个帖子
+        int maxComments = Integer.parseInt(data.getSendData().getConfigDatas().getHome_HomeBrowseCount());
+//        int maxComments = 0; // 最多点赞x个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 15; // 最多滚动15次
 

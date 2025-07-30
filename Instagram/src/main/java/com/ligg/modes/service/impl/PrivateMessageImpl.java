@@ -40,16 +40,19 @@ public class PrivateMessageImpl implements PrivateMessage {
             ));
             if (sendButton.isDisplayed()) {
                 sendButton.click();
+                Thread.sleep(3000);
                 //放大窗口
-                wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(".x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div.html-div.xdj266r.x14z9mp.xat24cr.x1lziwak.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x9f619.xjbqb8w.x78zum5.x15mokao.x1ga7v0g.x16uus16.xbiv7yw.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x1qjc9v5.x1oa3qoh.x1nhvcw1 > div > div.html-div.xdj266r.x14z9mp.xat24cr.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x9f619.xjbqb8w.x78zum5.x15mokao.x1ga7v0g.x16uus16.xbiv7yw.x1diwwjn.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.x1q0g3np.xqjyukv.x1qjc9v5.x1oa3qoh.x13a6bvl > div:nth-child(1)")
-                )).click();
+                WebElement element = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(".x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div.html-div.xdj266r.x14z9mp.xat24cr.x1lziwak.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x9f619.xjbqb8w.x78zum5.x15mokao.x1ga7v0g.x16uus16.xbiv7yw.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x1qjc9v5.x1oa3qoh.x1nhvcw1 > div > div.html-div.xdj266r.x14z9mp.xat24cr.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x9f619.xjbqb8w.x78zum5.x15mokao.x1ga7v0g.x16uus16.xbiv7yw.x1diwwjn.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.x1q0g3np.xqjyukv.x1qjc9v5.x1oa3qoh.x13a6bvl > div:nth-child(1)")
+                ));
+                Thread.sleep(4000);
+                element.click();
             }
         } catch (Exception e) {
             // 更多按钮
             String moreSelector = "svg[aria-label='选项']";
             WebElement more = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(moreSelector)));
             more.click();
-            Thread.sleep(2000);
+            Thread.sleep(5000);
             String messageSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div > button:nth-child(6)";
             WebElement message = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(messageSelector)));
             message.click();
@@ -67,11 +70,16 @@ public class PrivateMessageImpl implements PrivateMessage {
         }
 
         //判断该用户是否允许发送私信
-        WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(
-                ".x1lun4ml.xso031l.xpilrb4.x78zum5.x1gg8mnh > div > span"
-        )));
-        if (element.isDisplayed()) {
-            return;
+        try {
+            WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(
+                    ".x1lun4ml.xso031l.xpilrb4.x78zum5.x1gg8mnh > div > span"
+            )));
+            if (element.isDisplayed()) {
+                return;
+            }
+        } catch (Exception e) {
+            // 如果找不到该元素，说明可以发送私信，继续执行
+            log.info("未找到限制发送私信的元素，可以继续发送私信");
         }
         //输入框框添加内容
         WebElement messageInput = wait.until(ExpectedConditions.presenceOfElementLocated(
