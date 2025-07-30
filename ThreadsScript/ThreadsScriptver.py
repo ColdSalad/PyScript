@@ -1,5 +1,7 @@
 import os.path
 import time
+import asyncio
+import aiohttp
 import requests
 import os
 import sys
@@ -181,28 +183,25 @@ def download_file_with_progress_http(url, local_path, progress_var, progress_lab
     except Exception as e:
         print(f"下载文件时发生错误： {e}")
 
-def version_ver():
-    global version
-    version = '1.0.0.0'
-    print(version)
+
+async def check_version():
+    version = '1.0.0.2'
     remote_version_url = 'http://ver.ry188.vip/API/getver.aspx?N=ThreadsScript'
-    response = requests.get(remote_version_url,headers=headers)
-    remote_version = response.text.strip()
-    print(remote_version)
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(remote_version_url, headers=headers) as response:
+            remote_version = (await response.text()).strip()
+            return version, remote_version
+
+def version_ver():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    version, remote_version = loop.run_until_complete(check_version())
+    print(version,remote_version)
     if remote_version > version:
-        print("有新版本可也。")
         install_new_version_thread(version, remote_version)
     else:
-        print("当前已是最新版本。")
-        # clr.AddReference("mscorlib")
-        # clr.AddReference("AuthorizeManage")
-        # # 导入命名空间中的类
-        # from AuthorizeManage import AuthorizeX
-        #
-        # # 调用GetAuthorize方法
-        # get_result = AuthorizeX.GetAuthorize("FBCJ")
-        # print(get_result)
-        win_main(version,1)
+        win_main(version, 1)
 if __name__ == "__main__":
     application_path = get_real_path()
     os.chdir(application_path)
