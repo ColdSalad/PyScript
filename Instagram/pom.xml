@@ -4,7 +4,7 @@
 
     <groupId>com.ligg</groupId>
     <artifactId>Instagram</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>Instagram-automation</name>
@@ -142,47 +142,7 @@
                 </executions>
             </plugin>
 
-            <!-- Launch4j Maven Plugin - 将jar转换为exe -->
-            <plugin>
-                <groupId>com.akathist.maven.plugins.launch4j</groupId>
-                <artifactId>launch4j-maven-plugin</artifactId>
-                <version>2.1.3</version>
-                <executions>
-                    <execution>
-                        <id>l4j-clui</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>launch4j</goal>
-                        </goals>
-                        <configuration>
-                            <headerType>gui</headerType>
-                            <jar>${project.build.directory}/${project.artifactId}-${project.version}.jar</jar>
-                            <outfile>${project.build.directory}/Instagram.exe</outfile>
-                            <downloadUrl>https://www.oracle.com/java/technologies/downloads/</downloadUrl>
-                            <!-- <icon>src/main/resources/image/instagram_logo.ico</icon> -->
-                            <jre>
-                                <bundledJre64Bit>false</bundledJre64Bit>
-                                <bundledJreAsFallback>false</bundledJreAsFallback>
-                                <minVersion>17.0.0</minVersion>
-                                <jdkPreference>preferJre</jdkPreference>
-                                <runtimeBits>64/32</runtimeBits>
-                            </jre>
-                            <versionInfo>
-                                <fileVersion>1.0.0.0</fileVersion>
-                                <txtFileVersion>${project.version}</txtFileVersion>
-                                <fileDescription>Instagram自动化工具</fileDescription>
-                                <copyright>2025 Ligg</copyright>
-                                <productVersion>1.0.0.0</productVersion>
-                                <txtProductVersion>${project.version}</txtProductVersion>
-                                <productName>Instagram</productName>
-                                <companyName>Ligg</companyName>
-                                <internalName>instagram</internalName>
-                                <originalFilename>Instagram.exe</originalFilename>
-                            </versionInfo>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+
         </plugins>
     </build>
 </project>
