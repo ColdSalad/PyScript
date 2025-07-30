@@ -2,7 +2,8 @@ import os
 import sys
 import asyncio
 
-import requests
+import aiohttp
+
 
 from Threads_middle import main
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QLabel, QTextEdit, QComboBox,QMessageBox,QCheckBox
@@ -157,6 +158,8 @@ class MyApp(QWidget):
         frame_gm.moveCenter(center_point)
         # 根据新的框架几何信息调整窗口位置
         self.move(frame_gm.topLeft())
+
+
     @asyncSlot()
     async def on_click(self):
         # 获取输入框内容并去除首尾空格
@@ -181,8 +184,7 @@ class MyApp(QWidget):
         #     self.button.setText(f"登錄中{'...'[:i + 1]}")
         #     self.button.repaint()
         #     await asyncio.sleep(0.5)
-        login = requests.get("http://aj.ry188.vip/api/Login.aspx?Account=" + content1 + "&PassWord=" + content2,
-                             timeout=15).text
+        login = await check_login(content1, content2)
         if "no" in login or "ok" in login:
             QMessageBox.warning(self, "登錄错误", "错误：賬號或密碼錯誤！", QMessageBox.Ok)
             # self.button.setText("確定")
@@ -201,7 +203,11 @@ class MyApp(QWidget):
             QMessageBox.critical(self, "错误", f"任务执行失败: {str(e)}", QMessageBox.Ok)
         finally:
             self.close()
-
+async def check_login(account, password):
+    url = f"http://aj.ry188.vip/api/Login.aspx?Account={account}&PassWord={password}"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, timeout=15) as response:
+            return await response.text()
 def win_main(version,day):
     global versions
     global days

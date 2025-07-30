@@ -8,7 +8,8 @@ import os
 import winreg  # 仅适用于Windows
 import shutil  # 适用于Linux和macOS
 
-import requests
+import aiohttp
+
 from PyQt5.QtWidgets import QApplication
 from Threads_loginwin import win_main
 from playwright.async_api import async_playwright
@@ -59,8 +60,10 @@ class Crawler:
         self.update_status("啟動瀏覽器...")
         playwright = await async_playwright().start()
         self.browser = await playwright.chromium.launch(headless=False, executable_path=self.browser_path,
-                                                        args=['--start-minimized'],
-        ignore_default_args=["--enable-automation"])
+            ignore_default_args=[
+                '--enable-automation',
+                '--disable-popup-blocking'
+            ])
         context = await self.browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
         )
@@ -226,9 +229,12 @@ class Crawler:
             self.browser = await playwright.chromium.launch(
                 headless=False,
                 executable_path=self.browser_path,
-                args=['--start-minimized']  # 确保浏览器启动时最小化
+            ignore_default_args=[
+                '--enable-automation',
+                '--disable-popup-blocking'
+            ]
             )
-            page = await self.browser.new_page()
+            page = await self.browser.new_page(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
             await page.goto(url="https://www.threads.net/login", wait_until='load')
             await asyncio.sleep(1)
 
@@ -239,7 +245,7 @@ class Crawler:
 
             # 检查登录是否成功
             try:
-                await page.wait_for_url("https://www.threads.net/?login_success=true", timeout=25000)
+                await page.wait_for_url("https://www.threads.net/?login_success=true", timeout=60000)
                 self.is_logged_in = True
             except:
                 current_url = await page.evaluate("() => window.location.href")
@@ -294,7 +300,7 @@ class Crawler:
         if "login" in self.page.url or "challenge" in self.page.url:
             raise Exception("登录失败，请检查用户名和密码")
         else:
-            print('登陆成功1')
+            print('登陆成功')
 
     # 获取请求Auth签名
     def getBearerAuth(self):
@@ -479,6 +485,8 @@ class Crawler:
                                     except Exception as e:
                                         print(f"备用發送按钮选择器也失败: {str(e)}")
                                 if send_button:
+                                    await send_button.scroll_into_view_if_needed()
+                                    await asyncio.sleep(2)
                                     await send_button.click()
                                     print(f"成功发送留言第 {i} 个帖子")
                                     # 等待留言发送完成
@@ -518,7 +526,7 @@ class Crawler:
                 self.update_status(f"留言內容: {self.leave_text[random_test]}")
                 print(f"已输入留言内容: {self.leave_text[random_test]}")
                 if self.message_pic :
-                    self.pic_path = GetHtmlpic(self.init)
+                    self.pic_path = await GetHtmlpic(self.init)
                     self.update_status("下載圖片...")
                     await asyncio.sleep(2)
                     if  self.pic_path is not None :
@@ -538,6 +546,8 @@ class Crawler:
                 send_button = await self.page.wait_for_selector(send_button_selector, timeout=5000)
 
                 if send_button:
+                    await send_button.scroll_into_view_if_needed()
+                    await asyncio.sleep(2)
                     await send_button.click()
                     print(f"成功发送留言帖子")
                     # 等待留言发送完成
@@ -636,6 +646,8 @@ class Crawler:
                                         except Exception as e:
                                             print(f"备用發送按钮选择器也失败: {str(e)}")
                                     if send_button:
+                                        await send_button.scroll_into_view_if_needed()
+                                        await asyncio.sleep(2)
                                         await send_button.click()
                                         self.update_status(f"成功留言第 {i} 個帖子...")
                                         print(f"成功发送留言第 {i} 个帖子")
@@ -718,22 +730,31 @@ class Crawler:
         # 再使用平台特定的方法
         self.minimize_browser_window()
 
-def GetHtmlpic(data):
-    # 创建img文件夹（如果不存在）
+
+async def GetHtmlpic(data):
+    if not data["SendData"]["ConfigDatas"]["SendPicList"]:
+        return None
+
+    random_test = random.randint(0, len(data["SendData"]["ConfigDatas"]["SendPicList"]) - 1)
+    url = data["SendData"]["ConfigDatas"]["SendPicList"][random_test]
+
     if not os.path.exists('img'):
         os.makedirs('img')
-    if len(data["SendData"]["ConfigDatas"]["SendPicList"]) > 0:
-        random_test = random.randint(0, len(data["SendData"]["ConfigDatas"]["SendPicList"]) - 1)
-        print(data["SendData"]["ConfigDatas"]["SendPicList"][random_test])
-        # 下载图片
-        htmlpic = requests.get(data["SendData"]["ConfigDatas"]["SendPicList"][random_test], timeout=30)
-        # 图片保存路径
-        img_path = os.path.join('img', 'image.png')
-        # 保存图片
-        with open(img_path, 'wb') as file:
-            file.write(htmlpic.content)
-        # 返回图片的绝对路径
-        return os.path.abspath(img_path)
+
+    img_path = os.path.join('img', 'image.png')
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, timeout=30) as response:
+            if response.status == 200:
+                with open(img_path, 'wb') as file:
+                    while True:
+                        chunk = await response.content.read(1024)
+                        if not chunk:
+                            break
+                        file.write(chunk)
+                return os.path.abspath(img_path)
+
+    return None
 
 def parse_bool(type_data):
     type_data = str(type_data).lower().strip()
