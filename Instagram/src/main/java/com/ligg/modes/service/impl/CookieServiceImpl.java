@@ -40,30 +40,8 @@ public class CookieServiceImpl implements CookieService {
         }
     }
 
-    @Override
-    public void addCookies(WebDriver driver, Set<Cookie> cookies) {
-        try {
-            for (Cookie cookie : cookies) {
-                driver.manage().addCookie(cookie);
-                log.info("已添加 cookie: {} = {}", cookie.getName(), cookie.getValue());
-            }
-            log.info("批量添加 cookies 完成，共添加 {} 个", cookies.size());
-        } catch (Exception e) {
-            log.error("批量添加 cookies 失败: {}", e.getMessage());
-        }
-    }
 
-    @Override
-    public Set<Cookie> getAllCookies(WebDriver driver) {
-        try {
-            Set<Cookie> cookies = driver.manage().getCookies();
-            log.info("获取到 {} 个 cookies", cookies.size());
-            return cookies;
-        } catch (Exception e) {
-            log.error("获取 cookies 失败: {}", e.getMessage());
-            return null;
-        }
-    }
+
 
     @Override
     public void deleteAllCookies(WebDriver driver) {
@@ -105,11 +83,11 @@ public class CookieServiceImpl implements CookieService {
         try {
             Set<Cookie> cookies = driver.manage().getCookies();
             Map<String, String> cookieMap = new HashMap<>();
-            
+
             for (Cookie cookie : cookies) {
                 cookieMap.put(cookie.getName(), cookie.getValue());
             }
-            
+
             // 保存到 JSON 文件
             try (FileWriter writer = new FileWriter(COOKIE_FILE_PATH)) {
                 gson.toJson(cookieMap, writer);
@@ -132,56 +110,17 @@ public class CookieServiceImpl implements CookieService {
                 log.warn("Cookie 文件不存在: {}", COOKIE_FILE_PATH);
                 return;
             }
-            
+
             String jsonContent = new String(Files.readAllBytes(Paths.get(COOKIE_FILE_PATH)));
             Map<String, String> cookieMap = gson.fromJson(jsonContent, Map.class);
-            
+
             for (Map.Entry<String, String> entry : cookieMap.entrySet()) {
                 addCookie(driver, entry.getKey(), entry.getValue(), ".instagram.com", "/");
             }
-            
+
             log.info("从文件加载了 {} 个 cookies", cookieMap.size());
         } catch (Exception e) {
             log.error("从文件加载 cookies 失败: {}", e.getMessage());
-        }
-    }
-
-    @Override
-    public void addInstagramCookies(WebDriver driver) {
-        try {
-            addCookie(driver, "sessionid", "76340853733%3A4Eu5FObeaV8V6f%3A25%3AAYfXRDonBAp8yY8iKpwGVG7QDgeKGJC_9v4H6JMN8g", ".instagram.com", "/");
-            log.info("Instagram cookies 添加完成");
-        } catch (Exception e) {
-            log.error("添加 Instagram cookies 失败: {}", e.getMessage());
-        }
-    }
-
-    @Override
-    public void addInstagramCookies(WebDriver driver, String sessionId, String csrfToken, String mid, String igDid) {
-        try {
-            // sessionid cookie（最重要的登录状态 cookie）
-            if (sessionId != null && !sessionId.isEmpty()) {
-                addCookie(driver, "sessionid", sessionId, ".instagram.com", "/");
-            }
-
-            // csrftoken cookie
-            if (csrfToken != null && !csrfToken.isEmpty()) {
-                addCookie(driver, "csrftoken", csrfToken, ".instagram.com", "/");
-            }
-
-            // mid cookie
-            if (mid != null && !mid.isEmpty()) {
-                addCookie(driver, "mid", mid, ".instagram.com", "/");
-            }
-
-            // ig_did cookie
-            if (igDid != null && !igDid.isEmpty()) {
-                addCookie(driver, "ig_did", igDid, ".instagram.com", "/");
-            }
-
-            log.info("Instagram cookies 添加完成");
-        } catch (Exception e) {
-            log.error("添加 Instagram cookies 失败: {}", e.getMessage());
         }
     }
 }

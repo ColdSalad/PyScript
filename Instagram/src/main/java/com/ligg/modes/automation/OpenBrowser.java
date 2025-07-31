@@ -47,9 +47,15 @@ public class OpenBrowser {
         this.adminUsername = adminUsername;
         //创建一个线程用于打开浏览器，避免GUI阻塞主线程
         new Thread(() -> {
-            log.info("尝试启动Edge浏览器...");
-            driver = new EdgeDriver();
-            driver.get("https://www.instagram.com/");
+            try{
+                driver = new ChromeDriver();
+                driver.get("https://www.instagram.com/");
+            } catch (Exception e) {
+                log.info("尝试启动Edge浏览器...");
+                driver = new EdgeDriver();
+                driver.get("https://www.instagram.com/");
+
+            }
 
             try {
                 Thread.sleep(2000);
@@ -72,7 +78,7 @@ public class OpenBrowser {
                 Thread.sleep(5000);
 
                 // 检查是否已经登录（通过检测登录表单是否存在）
-                boolean needLogin = false;
+                boolean needLogin;
                 try {
                     // 尝试查找登录表单，如果找到说明需要登录
                     WebElement loginForm = driver.findElement(By.xpath("//*[@id=\"loginForm\"]"));
@@ -116,7 +122,7 @@ public class OpenBrowser {
                     log.info("登录后当前 URL: {}", currentUrl);
 
                     // 如果不在主页，尝试点击主页按钮
-                    if (!currentUrl.equals("https://www.instagram.com/?next=%2F")) {
+                    if (currentUrl != null && !currentUrl.equals("https://www.instagram.com/?next=%2F")) {
                         try {
                             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
                             var homeButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(1) > div > span > div > a > div")));
@@ -160,16 +166,15 @@ public class OpenBrowser {
         Data.ConfigDatas configDatas = data.getSendData().getConfigDatas();
         String Home_IsEnableLike = configDatas.getHome_IsEnableLike();
         int likedCount = 0; // 已点赞的帖子数
-//        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
-        int maxLikes = 0; // 最多点赞10个帖子
+        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
+//        int maxLikes = 0; // 最多点赞10个帖子
         int scrollAttempts = 0; // 滚动次数
         int maxScrollAttempts = 10; // 最多滚动次
 
         //点赞
         if (Objects.equals(Home_IsEnableLike, "true")) {
             try {
-                while (likedCount < maxLikes && scrollAttempts < maxScrollAttempts) {
-                    // 查找所有未点赞的按钮（通过aria-label="赞"识别）
+                while (likedCount < maxLikes) {
                     List<WebElement> likeButtons = driver.findElements(By.cssSelector("svg[aria-label='赞']"));
 
                     if (!likeButtons.isEmpty()) {
@@ -280,7 +285,7 @@ public class OpenBrowser {
         int maxScrollAttempts = 15; // 最多滚动15次
 
         try {
-            while (commentedCount < maxComments && scrollAttempts < maxScrollAttempts) {
+            while (commentedCount < maxComments) {
                 List<WebElement> commentButtons = driver.findElements(By.cssSelector("svg[aria-label='评论']"));
 
                 for (WebElement svgElement : commentButtons) {
@@ -319,7 +324,7 @@ public class OpenBrowser {
             }
 
             js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", svgElement);
-            Thread.sleep(1000);
+            Thread.sleep(2000);
 
             WebElement clickableParent = findClickableParent(svgElement, js);
             if (clickableParent == null) {
@@ -345,7 +350,7 @@ public class OpenBrowser {
                 log.warn("在弹窗中未找到或无法点击评论图标，将直接尝试输入评论。");
                 // 即使找不到图标，也继续尝试，因为UI可能已经允许直接输入
             }
-            boolean success = submitComment(driver, js, commentedCount);
+            boolean success = submitComment(driver, commentedCount);
             closeCommentBox(js);
 
             return success;
@@ -358,22 +363,28 @@ public class OpenBrowser {
     /**
      * 提交评论
      */
-    private boolean submitComment(WebDriver driver, JavascriptExecutor js, int commentedCount) {
+    private boolean submitComment(WebDriver driver, int commentedCount) {
         String[] comments = this.data.getSendData().getLeaveText().split("\\n\\n\\n");
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
         try {
-            String commentInputSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div.xb88tzc.xw2csxc.x1odjw0f.x5fp0pe.x1qjc9v5.xjbqb8w.xjwep3j.x1t39747.x1wcsgtt.x1pczhz8.xr1yuqi.x11t971q.x4ii5y1.xvc5jky.x15h9jz8.x47corl.xh8yej3.xir0mxb.x1juhsu6 > div > article > div > div.x1qjc9v5.x972fbf.x10w94by.x1qhh985.x14e42zd.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x5wqa0o.xln7xf2.xk390pu.xdj266r.x14z9mp.xat24cr.x1lziwak.x65f84u.x1vq45kp.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1n2onr6.x11njtxf > div > div > div.x78zum5.xdt5ytf.x1q2y9iw.x1n2onr6.xh8yej3.x9f619.x1iyjqo2.x13lttk3.x1t7ytsu.xpilrb4.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1b5io7h > section.x5ur3kl.x13fuv20.x178xt8z.x1roi4f4.x2lah0s.xvs91rp.xl56j7k.x17ydfre.x1n2onr6.x10b6aqq.x1yrsyyn.x1hrcb2b.xv54qhq > div > form > div > textarea";
-            WebElement commentInput = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(commentInputSelector)));
-            Thread.sleep(3000);
-            //随机选择一个评论内容
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+            Thread.sleep(2000);
+            WebElement commentInput = wait.until(ExpectedConditions.elementToBeClickable(
+                    By.cssSelector("div[role='dialog'] textarea[placeholder*='添加评论']")
+            ));
             String commentText = comments[new Random().nextInt(comments.length)];
+            Thread.sleep(2000);
+            // 先清空再输入（防止残留内容）
+            commentInput.click();
+            Thread.sleep(300);
             commentInput.sendKeys(commentText);
             Thread.sleep(1000);
 
             //发送评论
-            String postSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div.xb88tzc.xw2csxc.x1odjw0f.x5fp0pe.x1qjc9v5.xjbqb8w.xjwep3j.x1t39747.x1wcsgtt.x1pczhz8.xr1yuqi.x11t971q.x4ii5y1.xvc5jky.x15h9jz8.x47corl.xh8yej3.xir0mxb.x1juhsu6 > div > article > div > div.x1qjc9v5.x972fbf.x10w94by.x1qhh985.x14e42zd.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x5wqa0o.xln7xf2.xk390pu.xdj266r.x14z9mp.xat24cr.x1lziwak.x65f84u.x1vq45kp.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1n2onr6.x11njtxf > div > div > div.x78zum5.xdt5ytf.x1q2y9iw.x1n2onr6.xh8yej3.x9f619.x1iyjqo2.x13lttk3.x1t7ytsu.xpilrb4.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x1b5io7h > section.x5ur3kl.x13fuv20.x178xt8z.x1roi4f4.x2lah0s.xvs91rp.xl56j7k.x17ydfre.x1n2onr6.x10b6aqq.x1yrsyyn.x1hrcb2b.xv54qhq > div > form > div > div.x13fj5qh > div";
-            js.executeScript("document.querySelector('" + postSelector + "').click();");
+            String postSelector = "//div[@role='dialog']//div[text()='发布']";
+            WebElement sendButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(postSelector)));
+
+            sendButton.click();
             log.info("成功评论第{}个帖子: {}", commentedCount + 1, commentText);
             Thread.sleep(3000);
             return true;

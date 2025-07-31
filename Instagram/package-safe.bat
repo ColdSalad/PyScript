@@ -56,15 +56,4 @@ echo 打包完成！
 echo ========================================
 echo 应用程序包位置: installer\Instagram\
 echo 主程序: installer\Instagram\Instagram.exe
-echo.
-echo 测试运行：
-echo cd installer\Instagram
-echo Instagram.exe
-echo.
-echo 分发说明：
-echo 将整个 installer\Instagram 文件夹复制到目标机器
-echo 无需安装JDK，直接运行Instagram.exe即可
-echo.
-echo 文件夹大小约为200-300MB（包含完整Java运行时）
-echo.
 pause
