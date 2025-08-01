@@ -1,6 +1,6 @@
 package com.ligg;
 
-import com.ligg.modes.ui.InstagramLogin;
+import com.ligg.ui.InstagramLogin;
 
 /**
  * @Author Ligg

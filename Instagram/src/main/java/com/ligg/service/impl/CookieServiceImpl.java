@@ -1,8 +1,8 @@
-package com.ligg.modes.service.impl;
+package com.ligg.service.impl;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.ligg.modes.service.CookieService;
+import com.ligg.service.CookieService;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;

@@ -1,7 +1,7 @@
-package com.ligg.modes.service.impl;
+package com.ligg.service.impl;
 
-import com.ligg.modes.automation.OpenBrowser;
-import com.ligg.modes.service.PrivateMessage;
+import com.ligg.automation.OpenBrowser;
+import com.ligg.service.PrivateMessage;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -40,9 +40,9 @@ public class PrivateMessageImpl implements PrivateMessage {
             ));
             if (sendButton.isDisplayed()) {
                 sendButton.click();
-                Thread.sleep(3000);
+                Thread.sleep(5000);
                 //放大窗口
-                WebElement element = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(".x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div.html-div.xdj266r.x14z9mp.xat24cr.x1lziwak.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x9f619.xjbqb8w.x78zum5.x15mokao.x1ga7v0g.x16uus16.xbiv7yw.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x1qjc9v5.x1oa3qoh.x1nhvcw1 > div > div.html-div.xdj266r.x14z9mp.xat24cr.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x9f619.xjbqb8w.x78zum5.x15mokao.x1ga7v0g.x16uus16.xbiv7yw.x1diwwjn.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.x1q0g3np.xqjyukv.x1qjc9v5.x1oa3qoh.x13a6bvl > div:nth-child(1)")
+                WebElement element = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("div.html-div.xdj266r.x14z9mp.xat24cr.xexx8yu.xyri2b.x18d9i69.x1c1uobl.x9f619.xjbqb8w.x78zum5.x15mokao.x1ga7v0g.x16uus16.xbiv7yw.x1diwwjn.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.x1q0g3np.xqjyukv.x1qjc9v5.x1oa3qoh.x13a6bvl > div:nth-child(1)")
                 ));
                 Thread.sleep(4000);
                 element.click();

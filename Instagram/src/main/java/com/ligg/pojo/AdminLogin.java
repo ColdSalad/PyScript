@@ -1,4 +1,4 @@
-package com.ligg.modes.pojo;
+package com.ligg.pojo;
 
 /**
  * @Author Ligg

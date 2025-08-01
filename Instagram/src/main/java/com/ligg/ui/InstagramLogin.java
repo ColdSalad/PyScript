@@ -1,6 +1,6 @@
-package com.ligg.modes.ui;
+package com.ligg.ui;
 
-import com.ligg.modes.automation.OpenBrowser;
+import com.ligg.http_request.HttpRequest;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -22,32 +22,25 @@ import java.util.Objects;
 
 /**
  * @Author Ligg
- * @Time 2025/7/10
+ * @Time 2025/7/2
  **/
-public class LoginUi extends Application {
+public class InstagramLogin extends Application {
 
-    private static final OpenBrowser openBrowser = new OpenBrowser();
+    private static final HttpRequest httpRequest = new HttpRequest();
 
     @Override
     public void start(Stage stage) {
-        createInstagramLoginUI(stage,null);
-    }
-
-    /**
-     * 创建Instagram登录界面
-     */
-    public static void createInstagramLoginUI(Stage stage,String adminUsername) {
         //设置窗口标题
-        stage.setTitle("Instagram 登录");
+        stage.setTitle("后台登录验证");
         //设置icon
-        stage.getIcons().add(new Image(Objects.requireNonNull(LoginUi.class.getResourceAsStream("/image/instagram_logo.jpg"))));
+        stage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/image/instagram_logo.jpg"))));
         //创建一个垂直盒子布局作为根容器
         VBox root = new VBox(20);
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(20, 20, 20, 20));
 
         //添加Logo
-        Image logoImage = new Image(Objects.requireNonNull(LoginUi.class.getResourceAsStream("/image/instagram_logo.jpg")));
+        Image logoImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/image/instagram_logo.jpg")));
         ImageView logo = new ImageView(logoImage);
         logo.setFitHeight(80);
         logo.setFitWidth(80);
@@ -55,15 +48,15 @@ public class LoginUi extends Application {
 
         //创建输入框
         TextField usernameField = new TextField();
-        usernameField.setPromptText("请输入Instagram用户名");
+        usernameField.setPromptText("请输入后台用户名");
         usernameField.setPrefWidth(200);
 
         PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("请输入Instagram密码");
+        passwordField.setPromptText("请输入后台密码");
         passwordField.setPrefWidth(200);
 
         //创建登录按钮
-        Button loginButton = new Button("登录");
+        Button loginButton = new Button("后台登录");
         loginButton.setStyle("-fx-background-color: #3897f0; -fx-text-fill: white;");
         loginButton.setPrefWidth(300);
         loginButton.setFont(Font.font(16));
@@ -83,11 +76,30 @@ public class LoginUi extends Application {
                 return;
             }
 
-            loginButton.setText("正在启动...");
+            loginButton.setText("验证中...");
             loginButton.setDisable(true);
 
-            // 调用自动化登录
-            openBrowser.Login(username, password, loginButton, adminUsername);
+            String response = httpRequest.login(username, password);
+            if (response == null || response.contains("ok") || response.contains("no")) {
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("提示");
+                    alert.setHeaderText(response);
+                    alert.showAndWait();
+                });
+                loginButton.setText("后台登录");
+                loginButton.setDisable(false);
+                return;
+            }
+
+            // 登录成功，关闭当前窗口并打开Instagram登录界面
+            stage.close();
+
+            // 创建新的Stage用于Instagram登录界面
+            Platform.runLater(() -> {
+                Stage instagramStage = new Stage();
+                LoginUi.createInstagramLoginUI(instagramStage,username);
+            });
         });
 
         //将所有元素添加到根容器

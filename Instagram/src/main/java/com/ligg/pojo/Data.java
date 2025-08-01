@@ -1,4 +1,4 @@
-package com.ligg.modes.pojo;
+package com.ligg.pojo;
 
 import java.util.List;
 

@@ -1,12 +1,14 @@
-package com.ligg.modes.automation;
+package com.ligg.automation;
 
-import com.ligg.modes.http_request.HttpRequest;
-import com.ligg.modes.pojo.Data;
-import com.ligg.modes.pojo.ProfilePage;
-import com.ligg.modes.service.CookieService;
-import com.ligg.modes.service.PrivateMessage;
-import com.ligg.modes.service.impl.CookieServiceImpl;
-import com.ligg.modes.service.impl.PrivateMessageImpl;
+import com.ligg.http_request.HttpRequest;
+import com.ligg.pojo.Data;
+import com.ligg.pojo.ProfilePage;
+import com.ligg.service.CookieService;
+import com.ligg.service.HomeEnableBrowse;
+import com.ligg.service.PrivateMessage;
+import com.ligg.service.impl.CookieServiceImpl;
+import com.ligg.service.impl.HomeEnableBrowseImpl;
+import com.ligg.service.impl.PrivateMessageImpl;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -39,6 +41,7 @@ public class OpenBrowser {
     private static final PrivateMessage privateMessage = new PrivateMessageImpl();
     private static final HttpRequest httpRequest = new HttpRequest();
     private static final CookieService cookieService = new CookieServiceImpl();
+    private static final HomeEnableBrowse homeEnableBrowse = new HomeEnableBrowseImpl();
     private String adminUsername;
     private Data data = null;
 
@@ -47,7 +50,7 @@ public class OpenBrowser {
         this.adminUsername = adminUsername;
         //创建一个线程用于打开浏览器，避免GUI阻塞主线程
         new Thread(() -> {
-            try{
+            try {
                 driver = new ChromeDriver();
                 driver.get("https://www.instagram.com/");
             } catch (Exception e) {
@@ -142,7 +145,7 @@ public class OpenBrowser {
 
                 //开始自动化操作
                 log.info("开始执行自动化操作");
-                like(driver, loginButton);
+                operation(driver, loginButton);
 
             } catch (InterruptedException e) {
                 log.error("网页加载超时: {}", e.getMessage());
@@ -155,70 +158,35 @@ public class OpenBrowser {
     /**
      * 点赞方法 - 自动滚动页面并对多个帖子点赞
      */
-    public void like(WebDriver driver, Button loginButton) {
+    public void operation(WebDriver driver, Button loginButton) {
         Data data = httpRequest.getData(adminUsername);
         this.data = data;
         log.info("开始自动点赞...");
-        Platform.runLater(() -> loginButton.setText("点赞中..."));
+        updateButtonState(loginButton);
         new WebDriverWait(driver, Duration.ofSeconds(10));
         JavascriptExecutor js = (JavascriptExecutor) driver;
 
         Data.ConfigDatas configDatas = data.getSendData().getConfigDatas();
         String Home_IsEnableLike = configDatas.getHome_IsEnableLike();
-        int likedCount = 0; // 已点赞的帖子数
-        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount()); // 最多点赞10个帖子
-//        int maxLikes = 0; // 最多点赞10个帖子
-        int scrollAttempts = 0; // 滚动次数
-        int maxScrollAttempts = 10; // 最多滚动次
+        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount());
 
-        //点赞
-        if (Objects.equals(Home_IsEnableLike, "true")) {
-            try {
-                while (likedCount < maxLikes) {
-                    List<WebElement> likeButtons = driver.findElements(By.cssSelector("svg[aria-label='赞']"));
 
-                    if (!likeButtons.isEmpty()) {
-                        for (WebElement svgElement : likeButtons) {
-                            // 检查元素是否可见且可点击
-                            if (svgElement.isDisplayed()) {
-                                // 滚动到元素位置
-                                js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", svgElement);
-                                Thread.sleep(1000); // 等待滚动完成
+        //首页浏览
+        if (Objects.equals(configDatas.getHome_IsEnableBrowse(), "true")) {
 
-                                // 查找可点击的父元素（通常是button）
-                                WebElement clickableParent = findClickableParent(svgElement, js);
-
-                                if (clickableParent != null) {
-                                    // 使用JavaScript点击，避免元素被遮挡的问题
-                                    js.executeScript("arguments[0].click();", clickableParent);
-                                    likedCount++;
-                                    log.info("成功点赞第{}个帖子", likedCount);
-                                    Thread.sleep(2000); // 点赞后等待2秒
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    // 如果还没达到目标数量，继续滚动页面
-                    if (likedCount < maxLikes) {
-                        log.info("滚动页面加载更多帖子...");
-                        js.executeScript("window.scrollBy(0, 800);"); // 向下滚动800像素
-                        Thread.sleep(3000); // 等待页面加载
-                        scrollAttempts++;
-                    }
+            //点赞
+            if (Objects.equals(Home_IsEnableLike, "true")) {
+                try {
+                    homeEnableBrowse.like(driver, maxLikes, js, loginButton);
+                } catch (InterruptedException e) {
+                    log.error("点赞过程中发生异常：{}", e.getMessage());
                 }
-
-                log.info("点赞完成，共点赞{}个帖子", likedCount);
-
-            } catch (InterruptedException e) {
-                log.error("点赞过程中发生异常：{}", e.getMessage());
             }
-        }
 
-        //评论
-        if (Objects.equals(configDatas.getHome_IsEnableLeave(), "true")) {
-            comment(driver, loginButton);
+            //评论
+            if (Objects.equals(configDatas.getHome_IsEnableLeave(), "true")) {
+                homeEnableBrowse.comment(driver, loginButton, data);
+            }
         }
 
         //私信
@@ -226,6 +194,7 @@ public class OpenBrowser {
             goToProfilePage(driver, js);
         }
 
+        //搜索
         if (Objects.equals(configDatas.getKey_IsEnableKey(), "true")) {
             search(driver);
         }
@@ -248,152 +217,12 @@ public class OpenBrowser {
                         driver.quit();
                     }
                 } else {
-                    updateButtonState(loginButton, "已完成");
+                    updateButtonState(loginButton);
                 }
             });
         });
     }
 
-    /**
-     * 查找SVG元素的可点击父元素
-     */
-    private WebElement findClickableParent(WebElement svgElement, JavascriptExecutor js) {
-        String script = "var element = arguments[0];" +
-                "while (element.parentNode) {" +
-                "  element = element.parentNode;" +
-                "  if (element.tagName.toLowerCase() === 'button' || element.hasAttribute('onclick') || element.getAttribute('role') === 'button') {" +
-                "    return element;" +
-                "  }" +
-                "}" +
-                "return null;";
-
-        return (WebElement) js.executeScript(script, svgElement);
-    }
-
-    /**
-     * 评论方法 - 自动滚动页面并对多个帖子进行评论
-     */
-    public void comment(WebDriver driver, Button loginButton) {
-        log.info("开始自动评论...");
-        Platform.runLater(() -> loginButton.setText("评论中..."));
-
-        JavascriptExecutor js = (JavascriptExecutor) driver;
-        int commentedCount = 0; // 已评论的帖子数
-        int maxComments = Integer.parseInt(data.getSendData().getConfigDatas().getHome_HomeBrowseCount());
-//        int maxComments = 0; // 最多点赞x个帖子
-        int scrollAttempts = 0; // 滚动次数
-        int maxScrollAttempts = 15; // 最多滚动15次
-
-        try {
-            while (commentedCount < maxComments) {
-                List<WebElement> commentButtons = driver.findElements(By.cssSelector("svg[aria-label='评论']"));
-
-                for (WebElement svgElement : commentButtons) {
-                    if (commentOnPost(svgElement, driver, js, commentedCount)) {
-                        commentedCount++;
-                        if (commentedCount >= maxComments) {
-                            break;
-                        }
-                    }
-                }
-
-                if (commentedCount < maxComments) {
-                    log.info("滚动页面加载更多帖子...");
-                    js.executeScript("window.scrollBy(0, 800);");
-                    Thread.sleep(3000);
-                    scrollAttempts++;
-                }
-            }
-
-            log.info("评论完成，共评论{}个帖子", commentedCount);
-            updateButtonState(loginButton, "完成");
-
-        } catch (InterruptedException e) {
-            log.error("评论过程中发生异常：{}", e.getMessage());
-            updateButtonState(loginButton, "评论失败");
-        }
-    }
-
-    /**
-     * 评论单个帖子
-     */
-    private boolean commentOnPost(WebElement svgElement, WebDriver driver, JavascriptExecutor js, int commentedCount) {
-        try {
-            if (!svgElement.isDisplayed()) {
-                return false;
-            }
-
-            js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", svgElement);
-            Thread.sleep(2000);
-
-            WebElement clickableParent = findClickableParent(svgElement, js);
-            if (clickableParent == null) {
-                return false;
-            }
-
-            js.executeScript("arguments[0].click();", clickableParent);
-            Thread.sleep(2000); // 等待弹窗加载
-
-            // 点击弹窗中的评论按钮
-            try {
-                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-                // 等待弹窗出现
-                WebElement commentModal = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div[role='dialog']")));
-                // 在弹窗中查找评论图标
-                WebElement commentIconInPopup = commentModal.findElement(By.cssSelector("svg[aria-label='评论']"));
-                WebElement clickableCommentButton = findClickableParent(commentIconInPopup, js);
-                if (clickableCommentButton != null) {
-                    js.executeScript("arguments[0].click();", clickableCommentButton);
-                    Thread.sleep(1000); // 等待输入框出现
-                }
-            } catch (Exception e) {
-                log.warn("在弹窗中未找到或无法点击评论图标，将直接尝试输入评论。");
-                // 即使找不到图标，也继续尝试，因为UI可能已经允许直接输入
-            }
-            boolean success = submitComment(driver, commentedCount);
-            closeCommentBox(js);
-
-            return success;
-        } catch (Exception e) {
-            log.warn("评论单个帖子时出现异常: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * 提交评论
-     */
-    private boolean submitComment(WebDriver driver, int commentedCount) {
-        String[] comments = this.data.getSendData().getLeaveText().split("\\n\\n\\n");
-
-        try {
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-            Thread.sleep(2000);
-            WebElement commentInput = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.cssSelector("div[role='dialog'] textarea[placeholder*='添加评论']")
-            ));
-            String commentText = comments[new Random().nextInt(comments.length)];
-            Thread.sleep(2000);
-            // 先清空再输入（防止残留内容）
-            commentInput.click();
-            Thread.sleep(300);
-            commentInput.sendKeys(commentText);
-            Thread.sleep(1000);
-
-            //发送评论
-            String postSelector = "//div[@role='dialog']//div[text()='发布']";
-            WebElement sendButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(postSelector)));
-
-            sendButton.click();
-            log.info("成功评论第{}个帖子: {}", commentedCount + 1, commentText);
-            Thread.sleep(3000);
-            return true;
-
-        } catch (Exception e) {
-            log.warn("评论输入框操作失败: {}", e.getMessage());
-            return false;
-        }
-    }
 
     /**
      * 进入个人首页
@@ -486,21 +315,11 @@ public class OpenBrowser {
 
 
     /**
-     * 关闭评论弹窗
-     */
-    private void closeCommentBox(JavascriptExecutor js) {
-        //关闭弹窗
-        String closeButtonSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.xo2ifbc.x10l6tqk.x1eu8d0j.x1vjfegm > div > div";
-        js.executeScript("document.querySelector('" + closeButtonSelector + "').click();");
-        log.info("关闭评论弹窗");
-    }
-
-    /**
      * 更新按钮状态
      */
-    private void updateButtonState(Button button, String text) {
+    private void updateButtonState(Button button) {
         Platform.runLater(() -> {
-            button.setText(text);
+            button.setText("已完成");
             button.setDisable(false);
         });
     }

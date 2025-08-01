@@ -1,8 +1,8 @@
-package com.ligg.modes.http_request;
+package com.ligg.http_request;
 
-import com.ligg.modes.automation.OpenBrowser;
-import com.ligg.modes.pojo.Data;
-import com.ligg.modes.pojo.ProfilePage;
+import com.ligg.automation.OpenBrowser;
+import com.ligg.pojo.Data;
+import com.ligg.pojo.ProfilePage;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;

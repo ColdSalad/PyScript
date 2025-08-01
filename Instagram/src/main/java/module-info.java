@@ -12,7 +12,7 @@ module instagram.automation {
     requires okhttp3;
     requires com.google.gson;
 
-    exports com.ligg.modes.ui;
-    exports com.ligg.modes.pojo to com.google.gson;
-    opens com.ligg.modes.pojo to com.google.gson;
+    exports com.ligg.ui;
+    exports com.ligg.pojo to com.google.gson;
+    opens com.ligg.pojo to com.google.gson;
 }

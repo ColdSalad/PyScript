@@ -1,4 +1,4 @@
-package com.ligg.modes.service;
+package com.ligg.service;
 
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
