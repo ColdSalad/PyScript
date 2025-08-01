@@ -167,7 +167,6 @@ public class OpenBrowser {
         JavascriptExecutor js = (JavascriptExecutor) driver;
 
         Data.ConfigDatas configDatas = data.getSendData().getConfigDatas();
-        String Home_IsEnableLike = configDatas.getHome_IsEnableLike();
         int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount());
 
 
@@ -175,7 +174,7 @@ public class OpenBrowser {
         if (Objects.equals(configDatas.getHome_IsEnableBrowse(), "true")) {
 
             //点赞
-            if (Objects.equals(Home_IsEnableLike, "true")) {
+            if (Objects.equals(configDatas.getHome_IsEnableLike(), "true")) {
                 try {
                     homeEnableBrowse.like(driver, maxLikes, js, loginButton);
                 } catch (InterruptedException e) {
@@ -188,10 +187,11 @@ public class OpenBrowser {
                 homeEnableBrowse.comment(driver, loginButton, data);
             }
         }
-
-        //私信
-        if (Objects.equals(configDatas.getHuDong_IsEnableMsg(), "true")) {
-            goToProfilePage(driver, js);
+        if (Objects.equals(configDatas.getHuDong_IsHuDong(), "true")) {
+            //私信
+            if (Objects.equals(configDatas.getHuDong_IsEnableMsg(), "true")) {
+                goToProfilePage(driver, js);
+            }
         }
 
         //搜索
@@ -233,7 +233,7 @@ public class OpenBrowser {
         Data.UserInFIdList userInFI = userInFIdList.get(0);
         Integer id = Integer.parseInt(userInFI.getId());
         Integer count = Integer.parseInt(userInFI.getCount());
-        ProfilePage profilePage = httpRequest.getProfilePage(0, id);
+        ProfilePage profilePage = httpRequest.getProfilePage(count, id);
 
         if (profilePage != null) {
             String[] MsgText = this.data.getSendData().getMsgText().split("\\n\\n\\n");
@@ -248,9 +248,9 @@ public class OpenBrowser {
                     int types = user.getTypes();
                     String instagramURL = "https://www.instagram.com/";
                     String msgText = MsgText[new Random().nextInt(MsgText.length)];//从MsgText数组中随机获取一条消息
-
+                    String url = instagramURL + userName;
                     //发送私信
-                    privateMessage.sendPrivateMessage(driver, instagramURL, userName, msgText);
+                    privateMessage.sendPrivateMessage(driver, url, userName, msgText);
                     Thread.sleep(2000); //等待发送完成
                 } catch (Exception e) {
                     log.warn("进入用户主页失败: {}", e.getMessage());
@@ -300,11 +300,11 @@ public class OpenBrowser {
 
             //遍历搜索条目，打开每个条目的页面
             for (String searchItemText : searchItemTexts) {
-                driver.get(instagram + "/" + searchItemText);
+                String url = instagram + "/" + searchItemText;
                 Thread.sleep(2000);
                 String msgText = MsgText[new Random().nextInt(MsgText.length)];
                 // 发送私信
-                privateMessage.sendPrivateMessage(driver, instagram, searchItemText, msgText);
+                privateMessage.sendPrivateMessage(driver, url, searchItemText, msgText);
                 Thread.sleep(2000);
             }
 

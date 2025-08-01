@@ -30,7 +30,8 @@ public class PrivateMessageImpl implements PrivateMessage {
     public void sendPrivateMessage(
             WebDriver driver, String url, String username, String msgText
     ) throws InterruptedException {
-        //打开弹窗点击私信按钮
+
+        driver.get(url);
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
 
         //先判断是否有发送信息按钮可以直接点击
@@ -56,17 +57,18 @@ public class PrivateMessageImpl implements PrivateMessage {
             String messageSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.x1uvtmcs.x4k7w5x.x1h91t0o.x1beo9mf.xaigb6o.x12ejxvf.x3igimt.xarpa2k.xedcshv.x1lytzrv.x1t2pt76.x7ja8zs.x1n2onr6.x1qrby5j.x1jfb8zj > div > div > div > div > div > button:nth-child(6)";
             WebElement message = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(messageSelector)));
             message.click();
+            Thread.sleep(5000);
         }
 
         //判断是否有通知弹窗
         try {
             WebElement textarea = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//h2[text()='打开通知']")));
             if (textarea.isDisplayed()) {
-                Thread.sleep(2000);
+                Thread.sleep(5000);
                 wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[text()='以后再说']"))).click();
             }
         } catch (Exception e) {
-            log.warn("没有通知弹窗");
+            log.info("没有通知弹窗");
         }
 
         //判断该用户是否允许发送私信
