@@ -55,9 +55,6 @@ public class CookieServiceImpl implements CookieService {
 
     /**
      * 获取特定的 cookie 值
-     * @param driver WebDriver实例
-     * @param cookieName cookie名称
-     * @return cookie值，如果不存在返回null
      */
     public String getCookieValue(WebDriver driver, String cookieName) {
         try {
@@ -77,7 +74,6 @@ public class CookieServiceImpl implements CookieService {
 
     /**
      * 保存 cookies 到 JSON 文件
-     * @param driver WebDriver实例
      */
     public void saveCookiesToJson(WebDriver driver) {
         try {
@@ -102,7 +98,6 @@ public class CookieServiceImpl implements CookieService {
 
     /**
      * 从 JSON 文件加载 cookies
-     * @param driver WebDriver实例
      */
     public void loadCookiesFromJson(WebDriver driver) {
         try {

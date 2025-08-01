@@ -172,21 +172,28 @@ public class OpenBrowser {
 
         //首页浏览
         if (Objects.equals(configDatas.getHome_IsEnableBrowse(), "true")) {
+            int maxComments = Integer.parseInt(data.getSendData().getConfigDatas().getHome_HomeBrowseCount());
+            try {
+                for (int i = 0; i < maxComments; i++) {
+                    //点赞
+                    if (Objects.equals(configDatas.getHome_IsEnableLike(), "true")) {
+                        homeEnableBrowse.like(driver, js, loginButton);
+                    }
+                    Thread.sleep(3000);
+                    //评论
+                    if (Objects.equals(configDatas.getHome_IsEnableLeave(), "true")) {
+                        homeEnableBrowse.comment(driver, loginButton, data);
+                    }
 
-            //点赞
-            if (Objects.equals(configDatas.getHome_IsEnableLike(), "true")) {
-                try {
-                    homeEnableBrowse.like(driver, maxLikes, js, loginButton);
-                } catch (InterruptedException e) {
-                    log.error("点赞过程中发生异常：{}", e.getMessage());
+                    js.executeScript("window.scrollBy(0, 800);"); // 向下滚动800像素
+                    Thread.sleep(3000);
                 }
+            } catch (Exception e) {
+                log.error("浏览过程中发生异常：{}", e.getMessage());
             }
 
-            //评论
-            if (Objects.equals(configDatas.getHome_IsEnableLeave(), "true")) {
-                homeEnableBrowse.comment(driver, loginButton, data);
-            }
         }
+
         if (Objects.equals(configDatas.getHuDong_IsHuDong(), "true")) {
             //私信
             if (Objects.equals(configDatas.getHuDong_IsEnableMsg(), "true")) {
@@ -194,7 +201,7 @@ public class OpenBrowser {
             }
         }
 
-        //搜索
+        //关键词搜索
         if (Objects.equals(configDatas.getKey_IsEnableKey(), "true")) {
             search(driver);
         }
