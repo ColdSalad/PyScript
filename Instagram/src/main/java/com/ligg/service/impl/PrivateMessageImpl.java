@@ -28,10 +28,9 @@ public class PrivateMessageImpl implements PrivateMessage {
      */
     @Override
     public void sendPrivateMessage(
-            WebDriver driver, String url, String username, String msgText
+            WebDriver driver, String username, String msgText
     ) throws InterruptedException {
 
-        driver.get(url);
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
 
         //先判断是否有发送信息按钮可以直接点击
@@ -97,5 +96,10 @@ public class PrivateMessageImpl implements PrivateMessage {
         Thread.sleep(2000);
         sendButton.click();
         log.info("已发送私信给用户: {}", username);
+    }
+
+    @Override
+    public void follow(WebDriver driver) {
+
     }
 }

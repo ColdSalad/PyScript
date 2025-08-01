@@ -6,9 +6,11 @@ import com.ligg.pojo.ProfilePage;
 import com.ligg.service.CookieService;
 import com.ligg.service.HomeEnableBrowse;
 import com.ligg.service.PrivateMessage;
+import com.ligg.service.SearchService;
 import com.ligg.service.impl.CookieServiceImpl;
 import com.ligg.service.impl.HomeEnableBrowseImpl;
 import com.ligg.service.impl.PrivateMessageImpl;
+import com.ligg.service.impl.SearchServiceImpl;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -42,6 +44,7 @@ public class OpenBrowser {
     private static final HttpRequest httpRequest = new HttpRequest();
     private static final CookieService cookieService = new CookieServiceImpl();
     private static final HomeEnableBrowse homeEnableBrowse = new HomeEnableBrowseImpl();
+    private static final SearchService searchService = new SearchServiceImpl();
     private String adminUsername;
     private Data data = null;
 
@@ -161,7 +164,6 @@ public class OpenBrowser {
     public void operation(WebDriver driver, Button loginButton) {
         Data data = httpRequest.getData(adminUsername);
         this.data = data;
-        log.info("开始自动点赞...");
         updateButtonState(loginButton);
         new WebDriverWait(driver, Duration.ofSeconds(10));
         JavascriptExecutor js = (JavascriptExecutor) driver;
@@ -177,6 +179,7 @@ public class OpenBrowser {
                 for (int i = 0; i < maxComments; i++) {
                     //点赞
                     if (Objects.equals(configDatas.getHome_IsEnableLike(), "true")) {
+                        log.info("开始自动点赞...");
                         homeEnableBrowse.like(driver, js, loginButton);
                     }
                     Thread.sleep(3000);
@@ -194,14 +197,12 @@ public class OpenBrowser {
 
         }
 
+        //互动
         if (Objects.equals(configDatas.getHuDong_IsHuDong(), "true")) {
-            //私信
-            if (Objects.equals(configDatas.getHuDong_IsEnableMsg(), "true")) {
-                goToProfilePage(driver, js);
-            }
+            goToProfilePage(driver, js);
         }
 
-        //关键词搜索
+        //关键词送欧式搜索
         if (Objects.equals(configDatas.getKey_IsEnableKey(), "true")) {
             search(driver);
         }
@@ -239,7 +240,7 @@ public class OpenBrowser {
 
         Data.UserInFIdList userInFI = userInFIdList.get(0);
         Integer id = Integer.parseInt(userInFI.getId());
-        Integer count = Integer.parseInt(userInFI.getCount());
+        Integer count = Integer.parseInt(this.data.getSendData().getConfigDatas().getHuDong_GetUserCount());
         ProfilePage profilePage = httpRequest.getProfilePage(count, id);
 
         if (profilePage != null) {
@@ -256,8 +257,20 @@ public class OpenBrowser {
                     String instagramURL = "https://www.instagram.com/";
                     String msgText = MsgText[new Random().nextInt(MsgText.length)];//从MsgText数组中随机获取一条消息
                     String url = instagramURL + userName;
+                    driver.get(url);
+
+                    //追踪(关注)
+                    if (Objects.equals(this.data.getSendData().getConfigDatas().getHuDong_IsEnableTracking(), "true")){
+                        searchService.EnableLeave(driver);
+                        //结束后重新回到用户首页
+                        driver.get(url);
+                    }
                     //发送私信
-                    privateMessage.sendPrivateMessage(driver, url, userName, msgText);
+                    if (Objects.equals(this.data.getSendData().getConfigDatas().getHuDong_IsEnableMsg(), "true")) {
+                        privateMessage.sendPrivateMessage(driver, userName, msgText);
+                    }
+
+
                     Thread.sleep(2000); //等待发送完成
                 } catch (Exception e) {
                     log.warn("进入用户主页失败: {}", e.getMessage());
@@ -278,40 +291,61 @@ public class OpenBrowser {
 
         try {
 
-            //点击搜索按钮
-            WebElement searchSvg = wait.until(ExpectedConditions.presenceOfElementLocated(
-                    By.cssSelector("svg[aria-label='搜索']")
-            ));
-            searchSvg.click();
 
-            Thread.sleep(2000);
+            String[] keys = this.data.getSendData().getConfigDatas().getKeys().split("#");
 
-            //搜索框中输入关键字
-            WebElement searchInput = wait.until(ExpectedConditions.presenceOfElementLocated(
-                    By.cssSelector("input[aria-label='搜索输入']")
-            ));
-            searchInput.sendKeys(this.data.getSendData().getConfigDatas().getKeys());
-            log.info("已输入搜索关键字: {}", this.data.getSendData().getConfigDatas().getKeys());
-            Thread.sleep(2000);
+            for (String key : keys) {
+                //点击搜索按钮
+                WebElement searchSvg = wait.until(ExpectedConditions.presenceOfElementLocated(
+                        By.cssSelector("svg[aria-label='搜索']")
+                ));
+                searchSvg.click();
 
-            //获取搜索条目集合
-            List<WebElement> searchItems = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(
-                    By.cssSelector("div > div > div.x9f619.x1ja2u2z.x78zum5.x1n2onr6.x1iyjqo2.xs83m0k.xeuugli.x1qughib.x6s0dn4.x1a02dak.x1q0g3np.xdl72j9 > div > div > div > span")
-            ));
-            //创建一个String数组，用于存储搜索条目
-            String[] searchItemTexts = new String[searchItems.size()];
-            //遍历搜索条目集合，将每个条目的文本存储到String数组中
-            for (int i = 0; i < searchItems.size(); i++) {
-                searchItemTexts[i] = searchItems.get(i).getText();
-            }
-
-            //遍历搜索条目，打开每个条目的页面
-            for (String searchItemText : searchItemTexts) {
-                String url = instagram + "/" + searchItemText;
                 Thread.sleep(2000);
-                String msgText = MsgText[new Random().nextInt(MsgText.length)];
-                // 发送私信
-                privateMessage.sendPrivateMessage(driver, url, searchItemText, msgText);
+                //搜索框中输入关键字
+                WebElement searchInput = wait.until(ExpectedConditions.presenceOfElementLocated(
+                        By.cssSelector("input[aria-label='搜索输入']")
+                ));
+                searchInput.sendKeys(key);
+                log.info("已输入搜索关键字: {}", this.data.getSendData().getConfigDatas().getKeys());
+                Thread.sleep(2000);
+
+                //获取搜索条目集合
+                List<WebElement> searchItems = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(
+                        By.cssSelector("div > div > div.x9f619.x1ja2u2z.x78zum5.x1n2onr6.x1iyjqo2.xs83m0k.xeuugli.x1qughib.x6s0dn4.x1a02dak.x1q0g3np.xdl72j9 > div > div > div > span")
+                ));
+                //创建一个String数组，用于存储搜索条目
+                String[] searchItemTexts = new String[searchItems.size()];
+                //遍历搜索条目集合，将每个条目的文本存储到String数组中
+                for (int i = 0; i < searchItems.size(); i++) {
+                    searchItemTexts[i] = searchItems.get(i).getText();
+                }
+
+                //遍历搜索条目，打开每个条目的页面
+                for (String searchItemText : searchItemTexts) {
+                    String url = instagram + "/" + searchItemText;
+                    Thread.sleep(2000);
+                    driver.get(url);
+                    String msgText = MsgText[new Random().nextInt(MsgText.length)];
+
+                    // 追踪(关注)
+                    if (Objects.equals(this.data.getSendData().getConfigDatas().getKey_IsEnableTracking(), "true")) {
+                        searchService.EnableLeave(driver);
+                    }
+
+                    // 点赞
+                    if (Objects.equals(this.data.getSendData().getConfigDatas().getKey_IsEnableLike(), "true")) {
+                        searchService.EnableLike(driver, url, this.data.getSendData().getConfigDatas().getKey_SearchCount());
+                    }
+
+                    // 发送私信
+                    if (Objects.equals(this.data.getSendData().getConfigDatas().getKey_IsEnableLeave(), "true")) {
+                        privateMessage.sendPrivateMessage(driver, searchItemText, msgText);
+                        Thread.sleep(2000);
+                    }
+                    Thread.sleep(2000);
+                }
+                driver.get(instagram);
                 Thread.sleep(2000);
             }
 

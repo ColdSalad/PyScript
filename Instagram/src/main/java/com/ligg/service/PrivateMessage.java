@@ -14,6 +14,11 @@ public interface PrivateMessage {
      * 发送私信
      */
     void sendPrivateMessage(
-            WebDriver driver, String url, String username, String msgText
+            WebDriver driver, String username, String msgText
     ) throws InterruptedException;
+
+    /**
+     * 关注
+     */
+    void follow(WebDriver driver);
 }
