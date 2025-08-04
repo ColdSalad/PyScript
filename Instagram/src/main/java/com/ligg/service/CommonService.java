@@ -6,7 +6,7 @@ import org.openqa.selenium.WebDriver;
  * @Author Ligg
  * @Time 2025/8/1
  **/
-public interface SearchService {
+public interface CommonService {
 
     /**
      * 关注
@@ -17,4 +17,9 @@ public interface SearchService {
      * 点赞
      */
     void EnableLike(WebDriver driver,String url,String Count);
+
+    /**
+     * 评论
+     */
+    void comments(WebDriver driver,String url,String Count,String msgText);
 }

@@ -99,7 +99,7 @@ public class PrivateMessageImpl implements PrivateMessage {
     }
 
     @Override
-    public void follow(WebDriver driver) {
+    public void Like(WebDriver driver, String url) {
 
     }
 }

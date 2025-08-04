@@ -18,7 +18,7 @@ public interface PrivateMessage {
     ) throws InterruptedException;
 
     /**
-     * 关注
+     * 点赞
      */
-    void follow(WebDriver driver);
+    void Like(WebDriver driver, String url);
 }

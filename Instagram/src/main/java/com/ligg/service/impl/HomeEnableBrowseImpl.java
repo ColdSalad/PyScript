@@ -3,7 +3,6 @@ package com.ligg.service.impl;
 import com.ligg.pojo.Data;
 import com.ligg.service.HomeEnableBrowse;
 import com.ligg.util.ClickableParent;
-import javafx.application.Platform;
 import javafx.scene.control.Button;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -15,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Random;
 
 /**
@@ -31,7 +29,7 @@ public class HomeEnableBrowseImpl implements HomeEnableBrowse {
      */
     @Override
     public void like(WebDriver driver, JavascriptExecutor js, Button loginButton) throws InterruptedException {
-        WebElement likeButtons = driver.findElement(By.cssSelector("svg[aria-label='赞']"));
+        WebElement likeButtons = driver.findElement(By.cssSelector("section  section  span >  .x1ypdohk  > div >div > span"));
 
         // 检查元素是否可见且可点击
         if (likeButtons.isDisplayed()) {
@@ -59,7 +57,7 @@ public class HomeEnableBrowseImpl implements HomeEnableBrowse {
         JavascriptExecutor js = (JavascriptExecutor) driver;
         int commentedCount = 0; // 已评论的帖子数
 
-        WebElement commentButtons = driver.findElement(By.cssSelector("svg[aria-label='评论']"));
+        WebElement commentButtons = driver.findElement(By.xpath("//section//section/div/span[2]/div/div"));
 
         WebElement clickableParent = ClickableParent.findClickableParent(commentButtons, js);
 
@@ -71,9 +69,8 @@ public class HomeEnableBrowseImpl implements HomeEnableBrowse {
         try {
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
             // 等待弹窗出现
-            WebElement commentModal = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div[role='dialog']")));
             // 在弹窗中查找评论图标
-            WebElement commentIconInPopup = commentModal.findElement(By.cssSelector("svg[aria-label='评论']"));
+            WebElement commentIconInPopup = driver.findElement(By.cssSelector("div[role='dialog'] div[tabindex='-1'] section:nth-of-type(1) > span:nth-of-type(2) > div >div"));
             WebElement clickableCommentButton = ClickableParent.findClickableParent(commentIconInPopup, js);
             if (clickableCommentButton != null) {
                 js.executeScript("arguments[0].click();", clickableCommentButton);
@@ -84,6 +81,7 @@ public class HomeEnableBrowseImpl implements HomeEnableBrowse {
             // 即使找不到图标，也继续尝试，因为UI可能已经允许直接输入
         }
         submitComment(driver, commentedCount, data);
+        Thread.sleep(3000);
         closeCommentBox(js);
         log.info("评论完成，共评论{}个帖子", commentedCount);
     }
@@ -100,7 +98,7 @@ public class HomeEnableBrowseImpl implements HomeEnableBrowse {
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
             Thread.sleep(2000);
             WebElement commentInput = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.cssSelector("div[role='dialog'] textarea[placeholder*='添加评论']")
+                    By.cssSelector("div[role='dialog'] form textarea")
             ));
             String commentText = comments[new Random().nextInt(comments.length)];
             Thread.sleep(2000);
@@ -108,14 +106,14 @@ public class HomeEnableBrowseImpl implements HomeEnableBrowse {
             commentInput.click();
             Thread.sleep(300);
             WebElement commentInput2 = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.cssSelector("div[role='dialog'] textarea[placeholder*='添加评论']")
+                    By.cssSelector("div[role='dialog'] form textarea")
             ));
             commentInput2.sendKeys(commentText);
             Thread.sleep(1000);
 
             //发送评论
-            String postSelector = "//div[@role='dialog']//div[text()='发布']";
-            WebElement sendButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(postSelector)));
+            String postSelector = "div[role='dialog'] form .x13fj5qh > div";
+            WebElement sendButton = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(postSelector)));
 
             sendButton.click();
             log.info("成功评论第{}个帖子: {}", commentedCount + 1, commentText);
@@ -137,15 +135,5 @@ public class HomeEnableBrowseImpl implements HomeEnableBrowse {
         String closeButtonSelector = "body > div.x1n2onr6.xzkaem6 > div.x9f619.x1n2onr6.x1ja2u2z > div > div.xo2ifbc.x10l6tqk.x1eu8d0j.x1vjfegm > div > div";
         js.executeScript("document.querySelector('" + closeButtonSelector + "').click();");
         log.info("关闭评论弹窗");
-    }
-
-    /**
-     * 更新按钮状态
-     */
-    private void updateButtonState(Button button, String text) {
-        Platform.runLater(() -> {
-            button.setText(text);
-            button.setDisable(false);
-        });
     }
 }

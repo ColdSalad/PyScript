@@ -6,11 +6,11 @@ import com.ligg.pojo.ProfilePage;
 import com.ligg.service.CookieService;
 import com.ligg.service.HomeEnableBrowse;
 import com.ligg.service.PrivateMessage;
-import com.ligg.service.SearchService;
+import com.ligg.service.CommonService;
 import com.ligg.service.impl.CookieServiceImpl;
 import com.ligg.service.impl.HomeEnableBrowseImpl;
 import com.ligg.service.impl.PrivateMessageImpl;
-import com.ligg.service.impl.SearchServiceImpl;
+import com.ligg.service.impl.CommonServiceImpl;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -44,7 +44,7 @@ public class OpenBrowser {
     private static final HttpRequest httpRequest = new HttpRequest();
     private static final CookieService cookieService = new CookieServiceImpl();
     private static final HomeEnableBrowse homeEnableBrowse = new HomeEnableBrowseImpl();
-    private static final SearchService searchService = new SearchServiceImpl();
+    private static final CommonService commonService = new CommonServiceImpl();
     private String adminUsername;
     private Data data = null;
 
@@ -159,7 +159,7 @@ public class OpenBrowser {
     }
 
     /**
-     * 点赞方法 - 自动滚动页面并对多个帖子点赞
+     * 开始干活
      */
     public void operation(WebDriver driver, Button loginButton) {
         Data data = httpRequest.getData(adminUsername);
@@ -169,7 +169,6 @@ public class OpenBrowser {
         JavascriptExecutor js = (JavascriptExecutor) driver;
 
         Data.ConfigDatas configDatas = data.getSendData().getConfigDatas();
-        int maxLikes = Integer.parseInt(configDatas.getHome_HomeBrowseCount());
 
 
         //首页浏览
@@ -244,7 +243,10 @@ public class OpenBrowser {
         ProfilePage profilePage = httpRequest.getProfilePage(count, id);
 
         if (profilePage != null) {
+            //私信内容
             String[] MsgText = this.data.getSendData().getMsgText().split("\\n\\n\\n");
+            //留言内容
+            String[] LeaveText = this.data.getSendData().getLeaveText().split("\\n\\n\\n");
             for (ProfilePage.User user : profilePage.getUserList()) {
                 try {
                     String userId = user.getUser_id();
@@ -260,17 +262,34 @@ public class OpenBrowser {
                     driver.get(url);
 
                     //追踪(关注)
-                    if (Objects.equals(this.data.getSendData().getConfigDatas().getHuDong_IsEnableTracking(), "true")){
-                        searchService.EnableLeave(driver);
+                    if (Objects.equals(this.data.getSendData().getConfigDatas().getHuDong_IsEnableTracking(), "true")) {
+                        commonService.EnableLeave(driver);
+                        Thread.sleep(3000);
                         //结束后重新回到用户首页
                         driver.get(url);
+
                     }
                     //发送私信
                     if (Objects.equals(this.data.getSendData().getConfigDatas().getHuDong_IsEnableMsg(), "true")) {
                         privateMessage.sendPrivateMessage(driver, userName, msgText);
+                        Thread.sleep(1000);
+                        driver.get(url);
+                    }
+                    //点赞
+                    if (Objects.equals(this.data.getSendData().getConfigDatas().getHuDong_IsEnableLike(), "true")) {
+                        commonService.EnableLike(driver, url, this.data.getSendData().getConfigDatas().getHuDong_TrackingUserCount());
+                        Thread.sleep(1000);
+                        driver.get(url);
                     }
 
-
+                    //留言(评论)
+                    if (Objects.equals(this.data.getSendData().getConfigDatas().getHuDong_IsEnableLeave(), "true")) {
+                        //随机获取一条留言内容
+                        String text = LeaveText[new Random().nextInt(LeaveText.length)];
+                        commonService.comments(driver, url, this.data.getSendData().getConfigDatas().getHuDong_TrackingUserCount(), text);
+                        Thread.sleep(1000);
+                        driver.get(url);
+                    }
                     Thread.sleep(2000); //等待发送完成
                 } catch (Exception e) {
                     log.warn("进入用户主页失败: {}", e.getMessage());
@@ -330,12 +349,12 @@ public class OpenBrowser {
 
                     // 追踪(关注)
                     if (Objects.equals(this.data.getSendData().getConfigDatas().getKey_IsEnableTracking(), "true")) {
-                        searchService.EnableLeave(driver);
+                        commonService.EnableLeave(driver);
                     }
 
                     // 点赞
                     if (Objects.equals(this.data.getSendData().getConfigDatas().getKey_IsEnableLike(), "true")) {
-                        searchService.EnableLike(driver, url, this.data.getSendData().getConfigDatas().getKey_SearchCount());
+                        commonService.EnableLike(driver, url, this.data.getSendData().getConfigDatas().getKey_SearchCount());
                     }
 
                     // 发送私信
@@ -360,7 +379,7 @@ public class OpenBrowser {
      */
     private void updateButtonState(Button button) {
         Platform.runLater(() -> {
-            button.setText("已完成");
+            button.setText("完成");
             button.setDisable(false);
         });
     }
