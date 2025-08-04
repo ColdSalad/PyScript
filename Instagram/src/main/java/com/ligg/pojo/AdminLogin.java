@@ -5,15 +5,15 @@ package com.ligg.pojo;
  * @Time 2025/7/12
  **/
 public class AdminLogin {
-    private String account;
+    private String username;
     private String password;
 
-    public String getAccount() {
-        return account;
+    public String getUsername() {
+        return username;
     }
 
-    public void setAccount(String account) {
-        this.account = account;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getPassword() {
