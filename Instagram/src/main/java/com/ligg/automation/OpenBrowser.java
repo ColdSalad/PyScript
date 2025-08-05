@@ -244,9 +244,9 @@ public class OpenBrowser {
 
         if (profilePage != null) {
             //私信内容
-            String[] MsgText = this.data.getSendData().getMsgText().split("\\n\\n\\n");
+            String[] MsgText = this.data.getSendData().getMsgText().split("\\n\\n");
             //留言内容
-            String[] LeaveText = this.data.getSendData().getLeaveText().split("\\n\\n\\n");
+            String[] LeaveText = this.data.getSendData().getLeaveText().split("\\n\\n");
             for (ProfilePage.User user : profilePage.getUserList()) {
                 try {
                     String userId = user.getUser_id();
@@ -257,7 +257,7 @@ public class OpenBrowser {
                     String createdAt = user.getCreated_at();
                     int types = user.getTypes();
                     String instagramURL = "https://www.instagram.com/";
-                    String msgText = MsgText[new Random().nextInt(MsgText.length)];//从MsgText数组中随机获取一条消息
+                    String msgText = MsgText[new Random().nextInt(MsgText.length)].replace("\n", "");//从MsgText数组中随机获取一条消息
                     String url = instagramURL + userName;
                     driver.get(url);
 
@@ -285,7 +285,7 @@ public class OpenBrowser {
                     //留言(评论)
                     if (Objects.equals(this.data.getSendData().getConfigDatas().getHuDong_IsEnableLeave(), "true")) {
                         //随机获取一条留言内容
-                        String text = LeaveText[new Random().nextInt(LeaveText.length)];
+                        String text = LeaveText[new Random().nextInt(LeaveText.length)].replace("\n", "");
                         commonService.comments(driver, url, this.data.getSendData().getConfigDatas().getHuDong_TrackingUserCount(), text);
                         Thread.sleep(1000);
                         driver.get(url);
@@ -304,13 +304,11 @@ public class OpenBrowser {
     private void search(WebDriver driver) {
 
         String instagram = "https://www.instagram.com";
-        driver.get(instagram + "/?next=%2F");
-        String[] MsgText = this.data.getSendData().getMsgText().split("\\n\\n\\n");
+        driver.get(instagram);
+        String[] MsgText = this.data.getSendData().getMsgText().split("\\n\\n");
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
         try {
-
-
             String[] keys = this.data.getSendData().getConfigDatas().getKeys().split("#");
 
             for (String key : keys) {
@@ -345,10 +343,12 @@ public class OpenBrowser {
                     String url = instagram + "/" + searchItemText;
                     Thread.sleep(2000);
                     driver.get(url);
-                    String msgText = MsgText[new Random().nextInt(MsgText.length)];
+                    String msgText = MsgText[new Random().nextInt(MsgText.length)].replace("\n", "");
 
                     // 追踪(关注)
                     if (Objects.equals(this.data.getSendData().getConfigDatas().getKey_IsEnableTracking(), "true")) {
+                        driver.get(url);
+                        Thread.sleep(3000);
                         commonService.EnableLeave(driver);
                     }
 
@@ -359,10 +359,11 @@ public class OpenBrowser {
 
                     // 发送私信
                     if (Objects.equals(this.data.getSendData().getConfigDatas().getKey_IsEnableLeave(), "true")) {
-                        privateMessage.sendPrivateMessage(driver, searchItemText, msgText);
+                        commonService.comments(driver, url, this.data.getSendData().getConfigDatas().getKey_SearchCount(), msgText);
                         Thread.sleep(2000);
                     }
                     Thread.sleep(2000);
+                    driver.get(instagram);
                 }
                 driver.get(instagram);
                 Thread.sleep(2000);

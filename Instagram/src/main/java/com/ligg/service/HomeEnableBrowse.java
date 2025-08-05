@@ -25,7 +25,7 @@ public interface HomeEnableBrowse {
     /**
      * 提交评论
      */
-    boolean submitComment(WebDriver driver, int commentedCount, Data data);
+    boolean submitComment(WebDriver driver, int commentedCount, Data data, JavascriptExecutor js);
 
     /**
      * 关闭评论弹窗

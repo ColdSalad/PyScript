@@ -66,21 +66,8 @@ public class HomeEnableBrowseImpl implements HomeEnableBrowse {
         Thread.sleep(2000); // 等待弹窗加载
 
         // 点击弹窗中的评论按钮
-        try {
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-            // 等待弹窗出现
-            // 在弹窗中查找评论图标
-            WebElement commentIconInPopup = driver.findElement(By.cssSelector("div[role='dialog'] div[tabindex='-1'] section:nth-of-type(1) > span:nth-of-type(2) > div >div"));
-            WebElement clickableCommentButton = ClickableParent.findClickableParent(commentIconInPopup, js);
-            if (clickableCommentButton != null) {
-                js.executeScript("arguments[0].click();", clickableCommentButton);
-                Thread.sleep(1000); // 等待输入框出现
-            }
-        } catch (Exception e) {
-            log.info("在弹窗中未找到或无法点击评论图标，将直接尝试输入评论。");
-            // 即使找不到图标，也继续尝试，因为UI可能已经允许直接输入
-        }
-        submitComment(driver, commentedCount, data);
+
+        submitComment(driver, commentedCount, data,js);
         Thread.sleep(3000);
         closeCommentBox(js);
         log.info("评论完成，共评论{}个帖子", commentedCount);
@@ -91,30 +78,36 @@ public class HomeEnableBrowseImpl implements HomeEnableBrowse {
      * 提交评论
      */
     @Override
-    public boolean submitComment(WebDriver driver, int commentedCount, Data data) {
-        String[] comments = data.getSendData().getLeaveText().split("\\n\\n\\n");
+    public boolean submitComment(WebDriver driver, int commentedCount, Data data, JavascriptExecutor js) {
+        String[] comments = data.getSendData().getLeaveText().split("\\n\\n");
 
         try {
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
             Thread.sleep(2000);
+            try {
+                // 在弹窗中查找评论图标
+                WebElement commentIconInPopup = driver.findElement(By.cssSelector("div[role='dialog'] div[tabindex='-1'] section:nth-of-type(1) > span:nth-of-type(2) > div >div"));
+                if (commentIconInPopup.isDisplayed()) {
+                    commentIconInPopup.click();
+                    Thread.sleep(1000); // 等待输入框出现
+                }
+            } catch (Exception e) {
+                log.info("在弹窗中未找到或无法点击评论图标，将直接尝试输入评论。");
+                // 即使找不到图标，也继续尝试，因为UI可能已经允许直接输入
+            }
+            //获取随机内容并删除/n
+            String commentText = comments[new Random().nextInt(comments.length)].replace("\n", "");
+            Thread.sleep(2000);
             WebElement commentInput = wait.until(ExpectedConditions.elementToBeClickable(
                     By.cssSelector("div[role='dialog'] form textarea")
             ));
-            String commentText = comments[new Random().nextInt(comments.length)];
-            Thread.sleep(2000);
-            // 先清空再输入（防止残留内容）
-            commentInput.click();
-            Thread.sleep(300);
-            WebElement commentInput2 = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.cssSelector("div[role='dialog'] form textarea")
-            ));
-            commentInput2.sendKeys(commentText);
+            commentInput.sendKeys(commentText);
             Thread.sleep(1000);
 
             //发送评论
             String postSelector = "div[role='dialog'] form .x13fj5qh > div";
             WebElement sendButton = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(postSelector)));
-
+            Thread.sleep(2000);
             sendButton.click();
             log.info("成功评论第{}个帖子: {}", commentedCount + 1, commentText);
             Thread.sleep(3000);

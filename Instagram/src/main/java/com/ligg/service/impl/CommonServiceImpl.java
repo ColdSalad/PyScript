@@ -21,6 +21,14 @@ public class CommonServiceImpl implements CommonService {
             WebElement focusButton = driver.findElement(By.cssSelector("div > button > div > div"));
             Thread.sleep(3000);
             focusButton.click();
+            Thread.sleep(3000);
+            //弹窗
+            WebElement confirm = driver.findElement(By.cssSelector("div[role='dialog']"));
+            if (confirm.isDisplayed()) {
+                //关闭按钮
+                WebElement closeButton = confirm.findElement(By.cssSelector("div[role='dialog'] div[role='button']:nth-of-type(1)"));
+                closeButton.click();
+            }
         } catch (InterruptedException e) {
             log.info("可能已经关注，直接跳过");
         }
